@@ -1,0 +1,462 @@
+import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
+import {Event as DDBEvent} from '../../../src/dynamodb';
+import {Event as S3Event} from '../../../src/s3';
+import {Event as SQSEvent} from '../../../src/sqs';
+import * as mockDDBData from '../../mocks/dynamodb/mock-data';
+import * as mockSQSData from '../../mocks/sqs/mock-data';
+import * as mockS3Data from '../../mocks/s3/mock-data';
+import {mockClient} from 'aws-sdk-client-mock';
+import {S3Client, GetObjectCommand} from '@aws-sdk/client-s3';
+import {readFileSync} from 'fs';
+import {Readable} from 'stream';
+
+const s3Mock = mockClient(S3Client);
+
+// Helper to create a readable stream from buffer
+function sdkStreamMixin(stream: Readable): any {
+    return Object.assign(stream, {
+        transformToByteArray: async () => {
+            const chunks: any[] = [];
+            for await (const chunk of stream) {
+                chunks.push(chunk);
+            }
+            return Buffer.concat(chunks);
+        },
+        transformToString: async () => {
+            const buffer = await (stream as any).transformToByteArray();
+            return buffer.toString('utf-8');
+        }
+    });
+}
+
+describe('Test Generic Event with Basic Settings: src/common/event.js', () => {
+    describe('Test DynamoDB Event with Basic Settings', () => {
+        const ddbEvent = new DDBEvent(mockDDBData.getData() as any as any, {globalLogger: true});
+
+        it('should return ddb object with region', () => {
+            const {records} = ddbEvent;
+            expect((records[0] as any).region).toBe('us-east-1');
+        });
+
+        it('should return all raw records', () => {
+            expect(ddbEvent.rawRecords).toEqual((mockDDBData.getData() as any).Records);
+        });
+
+        it('should throw error when calling operations not as an array', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                operations: 'create' as any
+            });
+            try {
+                await ddbEvent.records;
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe('operations must be an array, exclusively containing create, update, delete');
+                }
+            }
+        });
+    });
+
+    describe('Test SQS Event with Basic Settings', () => {
+        const sqsEvent = new SQSEvent(mockSQSData.getData() as any);
+
+        it('it should return sqs body as an object', () => {
+            const {records} = sqsEvent;
+            expect((records[0] as any).body).toEqual({status: 'ok'});
+        });
+
+        it('it should return all raw records', () => {
+            expect(sqsEvent.rawRecords).toEqual((mockSQSData.getData() as any).Records);
+        });
+    });
+
+    describe('Test S3 Event with Basic Settings', () => {
+        const s3Event = new S3Event(mockS3Data.getData() as any, {globalLogger: true});
+
+        it('should return s3 record with region', () => {
+            const {records} = s3Event;
+            expect((records[0] as any).region).toBe('us-east-1');
+        });
+
+        it('should return all raw records', () => {
+            expect(s3Event.rawRecords).toEqual((mockS3Data.getData() as any).Records);
+        });
+    });
+});
+
+describe('Test Generic Event with Advance Settings: src/common/event.js', () => {
+    beforeEach(() => {
+        s3Mock.reset();
+    });
+
+    afterEach(() => {
+        s3Mock.reset();
+    });
+
+    describe('Test Event with Advance Settings', () => {
+        class DataClass {
+            record: any;
+            constructor(record: any) {
+                this.record = record;
+            }
+        }
+
+        it('should return records even with before function defined', async () => {
+            const spyFn = jest.fn();
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                before: spyFn as any
+            });
+            await ddbEvent.process();
+            expect(spyFn).toHaveBeenCalledTimes(1);
+        });
+
+        it('should return records with schemaPath validation', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                requiredBody: 'v1-ddb-record',
+                schemaPath: 'test/mocks/openapi.yml'
+            });
+            await ddbEvent.process();
+            expect(ddbEvent.records.length).toBe(1);
+        });
+
+        it('should throw error with schemaPath validation', async () => {
+            const mock = mockDDBData.getData() as any;
+            const ddbEvent = new DDBEvent(mock, {
+                globalLogger: true,
+                requiredBody: 'v1-ddb-record-fail',
+                schemaPath: 'test/mocks/openapi.yml',
+                strictValidation: true
+            });
+            try {
+                await ddbEvent.process();
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe(
+                        '[{"path":"root","message":"must NOT have additional properties"},{"path":"/active","message":"must be number"}]'
+                    );
+                }
+            }
+        });
+
+        it('should return records with requiredBody as object', async () => {
+            const requiredBody = {
+                type: 'object',
+                required: ['example_id', 'note', 'active', 'personal', 'transportation'],
+                additionalProperties: false,
+                properties: {
+                    example_id: {
+                        type: 'string'
+                    },
+                    note: {
+                        type: 'string'
+                    },
+                    active: {
+                        type: 'boolean'
+                    },
+                    personal: {
+                        type: 'object',
+                        properties: {
+                            gender: {
+                                type: 'string'
+                            },
+                            last_name: {
+                                type: 'string'
+                            },
+                            first_name: {
+                                type: 'string'
+                            }
+                        }
+                    },
+                    transportation: {
+                        type: 'array'
+                    }
+                }
+            };
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                requiredBody
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(1);
+        });
+
+        it('should throw error with recordBody as object', async () => {
+            const requiredBody = {
+                type: 'object',
+                required: ['example_id', 'note', 'active', 'personal', 'transportation'],
+                additionalProperties: false,
+                properties: {
+                    example_id: {
+                        type: 'string'
+                    },
+                    note: {
+                        type: 'string'
+                    },
+                    active: {
+                        type: 'number'
+                    },
+                    transportation: {
+                        type: 'array'
+                    }
+                }
+            };
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                requiredBody
+            });
+            try {
+                await ddbEvent.process();
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe(
+                        '[{"path":"root","message":"must NOT have additional properties"},{"path":"/active","message":"must be number"}]'
+                    );
+                }
+            }
+        });
+
+        it('should throw error with when not including schemaPath', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                requiredBody: 'v1-ddb-record-fail'
+            });
+            try {
+                await ddbEvent.process();
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe('Must provide schemaPath if using requireBody as a reference');
+                }
+            }
+        });
+
+        it('should throw error with calling wrong records with advance params', async () => {
+            const spyFn = jest.fn();
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                before: spyFn as any
+            });
+            try {
+                await ddbEvent.records;
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe('Must use Event.process() with these params & await the records');
+                }
+            }
+        });
+
+        it('should assign dataClass', () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                dataClass: DataClass
+            });
+            expect(ddbEvent.records[0] instanceof DataClass).toBe(true);
+        });
+
+        it('should run ddb event when combined with all advance settings', async () => {
+            const spyFn = jest.fn();
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                before: spyFn as any,
+                dataClass: DataClass,
+                requiredBody: 'v1-ddb-record',
+                schemaPath: 'test/mocks/openapi.yml'
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(spyFn).toHaveBeenCalledTimes(1);
+            expect(records[0] instanceof DataClass).toBe(true);
+        });
+
+        it('should throw error when isJSON is activated by getObject is not', async () => {
+            const s3Event = new S3Event(mockS3Data.getData() as any, {isJSON: true});
+            try {
+                await s3Event.process();
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe('Must enable getObject if using expecting JSON from S3 object');
+                }
+            }
+        });
+
+        it('should get object when getObject is activated', async () => {
+            const fileBuffer = readFileSync('./test/mocks/s3/mock-object.json');
+            const stream = Readable.from(fileBuffer);
+            s3Mock.on(GetObjectCommand).resolves({
+                Body: sdkStreamMixin(stream)
+            });
+
+            const s3Event = new S3Event(mockS3Data.getJsonData() as any, {getObject: true});
+            await s3Event.process(); const records = s3Event.records;
+            expect((records[0] as any).body.Body).toBeInstanceOf(Buffer);
+        });
+
+        it('should get object and parse JSON when getObject and isJSON is activated', async () => {
+            const fileBuffer = readFileSync('./test/mocks/s3/mock-object.json');
+            const stream = Readable.from(fileBuffer);
+            s3Mock.on(GetObjectCommand).resolves({
+                Body: sdkStreamMixin(stream)
+            });
+
+            const s3Event = new S3Event(mockS3Data.getJsonData() as any, {getObject: true, isJSON: true});
+            await s3Event.process(); const records = s3Event.records;
+            expect((records[0] as any).body).toEqual({id: 'true'});
+        });
+
+        it('should get object and parse CSV when getObject and isCSV is activated', async () => {
+            const fileBuffer = readFileSync('./test/mocks/s3/mock-object.csv');
+            const stream = Readable.from(fileBuffer);
+            s3Mock.on(GetObjectCommand).resolves({
+                Body: sdkStreamMixin(stream)
+            });
+
+            const s3Event = new S3Event(mockS3Data.getCsvData() as any, {getObject: true, isCSV: true});
+            await s3Event.process(); const records = s3Event.records;
+            expect((records[0] as any).body).toEqual([{Key: '1', Value: 'Value 1'}]);
+        });
+
+        it('should run s3 event when combined with all advance settings', async () => {
+            const fileBuffer = readFileSync('./test/mocks/s3/mock-object.json');
+            const stream = Readable.from(fileBuffer);
+            s3Mock.on(GetObjectCommand).resolves({
+                Body: sdkStreamMixin(stream)
+            });
+
+            const s3Event = new S3Event(mockS3Data.getJsonData() as any, {
+                getObject: true,
+                isJSON: true,
+                requiredBody: 'v1-response-result',
+                schemaPath: 'test/mocks/openapi.yml',
+                dataClass: DataClass
+            });
+            await s3Event.process(); const records = s3Event.records;
+            expect(records[0] instanceof DataClass).toBe(true);
+        });
+
+        it('should throw error with s3 event when combined with all advance settings and invalid s3 body', async () => {
+            const fileBuffer = readFileSync('./test/mocks/s3/mock-object.json');
+            const stream = Readable.from(fileBuffer);
+            s3Mock.on(GetObjectCommand).resolves({
+                Body: sdkStreamMixin(stream)
+            });
+
+            const s3Event = new S3Event(mockS3Data.getJsonData() as any, {
+                getObject: true,
+                isJSON: true,
+                requiredBody: 'v1-response-fail',
+                schemaPath: 'test/mocks/openapi.yml'
+            });
+            try {
+                await s3Event.process();
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe('[{"path":"/id","message":"must be number"}]');
+                }
+            }
+        });
+
+        it('should ignore error with validationError as false', async () => {
+            const requiredBody = {
+                type: 'object',
+                required: ['example_id', 'note', 'active', 'personal', 'transportation'],
+                additionalProperties: false,
+                properties: {
+                    example_id: {
+                        type: 'string'
+                    },
+                    note: {
+                        type: 'string'
+                    },
+                    active: {
+                        type: 'number'
+                    },
+                    transportation: {
+                        type: 'array'
+                    }
+                }
+            };
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                validationError: false,
+                requiredBody
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(0);
+        });
+
+        it('should return records since only looking for DDB create', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                operations: ['create'],
+                operationError: false
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(1);
+        });
+
+        it('should return records since only looking for DDB update', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getUpdateData() as any, {
+                globalLogger: true,
+                operations: ['update'],
+                operationError: false
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(1);
+        });
+
+        it('should return records since only looking for DDB delete', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getDeletedData() as any, {
+                globalLogger: true,
+                operations: ['delete'],
+                operationError: false
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(1);
+        });
+
+        it('should return no records since only looking for DDB deletes', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                operations: ['delete'],
+                operationError: false
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(0);
+        });
+
+        it('should return no records since only looking for DDB updates', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getUpdateData() as any, {
+                globalLogger: true,
+                operations: ['create'],
+                operationError: false
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(0);
+        });
+
+        it('should return no records since only looking for DDB delete', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getDeletedData() as any, {
+                globalLogger: true,
+                operations: ['update'],
+                operationError: false
+            });
+            await ddbEvent.process(); const records = ddbEvent.records;
+            expect(records.length).toBe(0);
+        });
+
+        it('should return throw exception since only looking for DDB deletes', async () => {
+            const ddbEvent = new DDBEvent(mockDDBData.getData() as any, {
+                globalLogger: true,
+                operations: ['delete'],
+                operationError: true
+            });
+            try {
+                await ddbEvent.process();
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toBe('record is operation: create; only allowed delete');
+                }
+            }
+        });
+    });
+});

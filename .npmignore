@@ -1,0 +1,71 @@
+# Source files (only publish dist/)
+src/
+test/
+
+# Configuration files
+tsconfig.json
+tsconfig.cjs.json
+jest.config.js
+.eslintrc.js
+.prettierrc
+
+# Documentation (keep only README.md)
+docs/
+*.md
+!README.md
+
+# CI/CD
+.circleci/
+.github/
+
+# Development tools
+.editorconfig
+.nvmrc
+
+# SonarCloud
+sonar-project.properties
+.scannerwork/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.tags
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+*.tsbuildinfo
+*.tgz
+
+# Misc
+.npmrc
+.env
+.env.*
+buildspec.yml
+openapi.yml
+package-lock.json
+example/
+
+# Coverage
+coverage/
+.nyc_output/

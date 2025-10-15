@@ -1,0 +1,97 @@
+{
+    "name": "acai-ts",
+    "version": "1.0.0",
+    "description": "DRY, configurable, declarative TypeScript library for working with Amazon Web Service Lambdas",
+    "author": "Paul Cruse III",
+    "license": "Apache-2.0",
+    "homepage": "https://syngenta.github.io/acai-ts-docs/",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/syngenta/acai-ts.git"
+    },
+    "bugs": {
+        "url": "https://github.com/syngenta/acai-ts/issues"
+    },
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "types": "./dist/esm/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/esm/index.js",
+            "require": "./dist/cjs/index.js",
+            "types": "./dist/esm/index.d.ts"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18.18.2"
+    },
+    "keywords": [
+        "acai",
+        "aws",
+        "amazon",
+        "lambda",
+        "serverless",
+        "typescript",
+        "decorators"
+    ],
+    "scripts": {
+        "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:package-json && npm run build:fix-esm",
+        "build:esm": "tsc -p tsconfig.json",
+        "build:cjs": "tsc -p tsconfig.cjs.json",
+        "build:package-json": "echo '{\"type\":\"module\"}' > dist/esm/package.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+        "build:fix-esm": "node scripts/fix-esm-imports.js",
+        "clean": "rimraf dist",
+        "dev": "ts-node src/index.ts",
+        "lint": "eslint 'src/**/*.ts'",
+        "lint:fix": "eslint 'src/**/*.ts' --fix",
+        "format": "prettier --write 'src/**/*.ts'",
+        "format:check": "prettier --check 'src/**/*.ts'",
+        "type-check": "tsc --noEmit",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "test:ci": "jest --ci --coverage --maxWorkers=2",
+        "docs": "typedoc",
+        "docs:watch": "typedoc --watch",
+        "prepublishOnly": "npm run build"
+    },
+    "dependencies": {
+        "@apideck/reva": "^0.2.1",
+        "@aws-sdk/client-dynamodb": "^3.911.0",
+        "@aws-sdk/client-s3": "^3.911.0",
+        "@aws-sdk/util-dynamodb": "^3.911.0",
+        "@types/aws-lambda": "^8.10.145",
+        "ajv": "^8.17.1",
+        "csv-parse": "^6.1.0",
+        "glob": "^11.0.3",
+        "js-yaml": "^4.1.0",
+        "json-schema-merge-allof": "^0.8.1",
+        "json-schema-ref-parser": "^9.0.9",
+        "reflect-metadata": "^0.2.2",
+        "xml2js": "^0.6.2"
+    },
+    "devDependencies": {
+        "@jest/globals": "^30.2.0",
+        "@types/jest": "^30.0.0",
+        "@types/js-yaml": "^4.0.9",
+        "@types/node": "^22.10.2",
+        "@types/xml2js": "^0.4.14",
+        "@typescript-eslint/eslint-plugin": "^8.18.2",
+        "@typescript-eslint/parser": "^8.18.2",
+        "aws-sdk-client-mock": "^4.1.0",
+        "eslint": "^8.57.1",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.2.1",
+        "jest": "^30.2.0",
+        "jest-junit": "^16.0.0",
+        "prettier": "^3.4.2",
+        "rimraf": "^6.0.1",
+        "ts-jest": "^29.4.5",
+        "ts-node": "^10.9.2",
+        "typedoc": "^0.28.14",
+        "typescript": "^5.7.2"
+    }
+}

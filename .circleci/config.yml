@@ -1,0 +1,158 @@
+version: 2.1
+orbs:
+    sonarcloud: sonarsource/sonarcloud@2.0.0
+commands:
+    node-install:
+        description: "Install Node.js dependencies"
+        steps:
+            - run:
+                name: Install dependencies
+                command: npm ci
+    node-type-check:
+        description: "Run TypeScript type checking"
+        steps:
+            - run:
+                name: TypeScript type check
+                command: npm run type-check
+    node-linter:
+        description: "Run ESLint with HTML output"
+        steps:
+            - run:
+                name: Run linter
+                command: |
+                    mkdir -p ./lint
+                    npm run lint -- --format html --output-file ./lint/index.html || true
+            - store_artifacts:
+                path: ./lint
+    node-build:
+        description: "Build TypeScript project (ESM + CJS)"
+        steps:
+            - run:
+                name: Build project
+                command: npm run build
+    node-test:
+        description: "Run Jest tests"
+        steps:
+            - run:
+                name: Run tests 
+                command: npm run test
+    node-coverage-report:
+        description: "Run Jest tests with coverage"
+        steps:
+            - run:
+                name: Run tests with coverage
+                command: |
+                    mkdir -p ./coverage
+                    npm run test:ci
+                environment:
+                    CI: true
+            - store_test_results:
+                path: ./coverage/junit.xml
+            - store_artifacts:
+                path: ./coverage
+    npm-deploy:
+        description: "Deploy package to NPM registry"
+        steps:
+            - attach_workspace:
+                at: .
+            - run:
+                name: Authenticate with NPM
+                command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+            - run:
+                name: Set package version from tag
+                command: npm version $CIRCLE_TAG --allow-same-version --no-git-tag-version
+            - run:
+                name: Publish to NPM
+                command: |
+                  if echo "$CIRCLE_TAG" | grep -iq "beta"; then
+                    echo "Beta version detected in tag: $CIRCLE_TAG"
+                    echo "Publishing with --tag beta"
+                    npm publish --access public --tag beta
+                  else
+                    echo "Stable version detected in tag: $CIRCLE_TAG"
+                    echo "Publishing to latest"
+                    npm publish --access public
+                  fi
+
+jobs:
+    install-build:
+        docker:
+            - image: cimg/node:18.18.2
+        steps:
+            - checkout:
+                method: full
+            - node-install
+            - node-build
+            - persist_to_workspace:
+                root: ~/project
+                paths:
+                    - ./*
+    type-check:
+        docker:
+            - image: cimg/node:18.18.2
+        steps:
+            - attach_workspace:
+                at: ~/project
+            - node-type-check
+    lint:
+        docker:
+            - image: cimg/node:18.18.2
+        steps:
+            - attach_workspace:
+                at: ~/project
+            - node-linter
+    test:
+        docker:
+            - image: cimg/node:18.18.2
+        steps:
+            - attach_workspace:
+                at: ~/project
+            - node-test
+    coverage:
+        docker:
+            - image: cimg/node:18.18.2
+        steps:
+            - attach_workspace:
+                at: ~/project
+            - node-coverage-report
+            - sonarcloud/scan
+    install-build-deploy:
+        docker:
+            - image: cimg/node:18.18.2
+        steps:
+            - checkout:
+                method: full
+            - node-install
+            - node-build
+            - npm-deploy
+workflows:
+    version: 2
+    # Deploy workflow: Runs on git tags, deploys to NPM
+    install-build-deploy-workflow:
+        jobs:
+            - install-build-deploy:
+                context:
+                    - npm-publish
+                filters:
+                    tags:
+                        only: /.*/
+                    branches:
+                        ignore: /.*/
+    # Test workflow: Runs on all branches, performs full testing
+    install-build-test-workflow:
+        jobs:
+            - install-build
+            - type-check:  
+                requires:
+                  - install-build
+            - lint:
+                requires:
+                  - install-build
+            - test:
+                requires:
+                  - install-build
+            - coverage:
+                context:
+                    - sonarcloud
+                requires:
+                  - install-build
