@@ -23,7 +23,8 @@ interface RequestWithPath {
  */
 interface PatternResolverParams {
     basePath?: string;
-    handlerPattern: string;
+    handlerPattern?: string;
+    routesPath?: string; // New unified parameter name
 }
 
 /**
@@ -55,7 +56,8 @@ export class PatternResolver {
         this.importer = importer;
         this.sep = importer.fileSeparator;
         this.basePath = params.basePath || '';
-        this.pattern = params.handlerPattern;
+        // Support both handlerPattern (legacy) and routesPath (new unified name)
+        this.pattern = params.handlerPattern || params.routesPath || '';
     }
 
     /**

@@ -131,8 +131,6 @@ workflows:
     install-build-deploy-workflow:
         jobs:
             - install-build-deploy:
-                context:
-                    - npm-publish
                 filters:
                     tags:
                         only: /.*/

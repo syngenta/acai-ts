@@ -21,12 +21,21 @@ export interface IRouterConfig {
     mode?: RoutingMode;
 
     /**
+     * Base path to strip from incoming requests (e.g., '/api' or '/acai-example')
+     * Useful when deploying with API Gateway custom domains or service prefixes
+     */
+    basePath?: string;
+
+    /**
      * Path to OpenAPI schema file
      */
     schemaPath?: string;
 
     /**
-     * Path to route handlers directory
+     * Path to route handlers directory or glob pattern
+     * - For 'directory' mode: Path to handlers directory (e.g., 'src/handlers')
+     * - For 'pattern' mode: Glob pattern to match handler files (e.g., 'src/handlers' + '**' + '/*.ts')
+     * - Not used for 'list' mode (use 'routes' instead)
      */
     routesPath?: string;
 

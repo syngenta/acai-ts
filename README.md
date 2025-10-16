@@ -127,8 +127,9 @@ import { Router } from 'acai-ts';
 
 export const handler = async (event) => {
   const router = new Router({
+    mode: 'pattern',
     basePath: '/api/v1',
-    handlerPattern: 'src/handlers/**/*.controller.ts'
+    routesPath: 'src/handlers/**/*.controller.ts'
   });
 
   return await router.route(event);
@@ -439,9 +440,11 @@ for (const user of dynamodb.records) {
 
 ```typescript
 interface RouterConfig {
-  basePath?: string;                    // Base path for all routes (e.g., '/api/v1')
+  mode?: 'directory' | 'pattern' | 'list';  // Routing mode (default: 'directory')
+  basePath?: string;                    // Base path to strip from requests (e.g., '/api/v1')
   schemaPath?: string;                  // Path to OpenAPI schema file
-  handlerPattern?: string;              // Glob pattern for handler files
+  routesPath?: string;                  // Path or glob pattern for handler files
+  routes?: RouteConfig[];               // Explicit route list (for 'list' mode)
   endpoints?: Array<typeof Endpoint>;   // Decorator-based endpoints
   autoValidate?: boolean;               // Validate responses (default: false)
   strictValidation?: boolean;           // Strict schema validation (default: false)

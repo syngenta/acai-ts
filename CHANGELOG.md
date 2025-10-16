@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Router Configuration**: Fixed parameter mapping issue where `routesPath` was not properly passed to resolver constructors
+  - Added `basePath` parameter to `IRouterConfig` interface for stripping request prefixes (e.g., API Gateway stage or service names)
+  - Updated `RouteResolver` to map `routesPath` to resolver-specific parameters (`handlerPath` for directory mode, `handlerPattern` for pattern mode)
+  - Updated `DirectoryResolver` and `PatternResolver` to accept both legacy parameter names and new unified `routesPath`
+  - Resolves "Handlers path not set" error when using directory or pattern routing modes
+
+### Added
+- **basePath Configuration**: New `basePath` option in Router configuration to strip prefixes from incoming requests
+  - Useful for API Gateway custom domains, stage names, or service prefixes (e.g., `/api`, `/acai-example`)
+  - Works with all routing modes (directory, pattern, list)
+
 ## [1.0.0] - 2025-10-15
 
 ### Added

@@ -159,7 +159,18 @@ export class RouteResolver {
         if (!this.resolver) {
             const mode = this.params.mode || 'directory';
             const ResolverClass = this.resolvers[mode];
-            this.resolver = new ResolverClass(this.params, this.importer);
+
+            // Map routesPath to resolver-specific parameter names
+            const resolverParams = {...this.params} as IRouterConfig & {handlerPath?: string; handlerPattern?: string};
+            if (this.params.routesPath) {
+                if (mode === 'directory') {
+                    resolverParams.handlerPath = this.params.routesPath;
+                } else if (mode === 'pattern') {
+                    resolverParams.handlerPattern = this.params.routesPath;
+                }
+            }
+
+            this.resolver = new ResolverClass(resolverParams, this.importer);
         }
     }
 

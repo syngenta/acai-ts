@@ -23,7 +23,8 @@ interface RequestWithPath {
  */
 interface DirectoryResolverParams {
     basePath?: string;
-    handlerPath: string;
+    handlerPath?: string;
+    routesPath?: string; // New unified parameter name
 }
 
 /**
@@ -56,7 +57,8 @@ export class DirectoryResolver {
         this.importer = importer;
         this.sep = importer.fileSeparator;
         this.basePath = params.basePath || '';
-        this.handlerPath = params.handlerPath;
+        // Support both handlerPath (legacy) and routesPath (new unified name)
+        this.handlerPath = params.handlerPath || params.routesPath || '';
     }
 
     /**
