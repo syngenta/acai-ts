@@ -10,24 +10,27 @@ import {MetadataKeys, getMetadata, setMetadata} from './metadata';
  *
  * @example
  * ```typescript
- * @After(logResponse)
- * @After(compressResponse)
- * @Route('GET', '/users')
- * export const getUsers = async (request: IRequest, response: IResponse) => {
- *   // Handler logic
- * };
+ * import { Endpoint, Request, Response, After } from 'acai-ts';
+ *
+ * export class UsersEndpoint extends Endpoint {
+ *     @After(logResponse)
+ *     @After(compressResponse)
+ *     async get(request: Request, response: Response): Promise<Response> {
+ *         // Handler logic
+ *         return response;
+ *     }
+ * }
  * ```
  *
- * @param middleware - Middleware function to execute after the handler
+ * @param middlewares - Middleware functions to execute after the handler
  */
-export function After(...middlewares: AfterMiddleware[]): <T extends Function>(target: T) => T {
-    return function <T extends Function>(target: T): T {
-        const existingMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, target as object) || [];
+export function After(...middlewares: AfterMiddleware[]): MethodDecorator {
+    return function (target: object, propertyKey: string | symbol, _descriptor: PropertyDescriptor): void {
+        const existingMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, target, propertyKey) || [];
 
         // Append new middlewares (so they execute in the order they're declared)
         const allMiddlewares = [...existingMiddlewares, ...middlewares];
 
-        setMetadata(MetadataKeys.AFTER, allMiddlewares, target as object);
-        return target;
+        setMetadata(MetadataKeys.AFTER, allMiddlewares, target, propertyKey);
     };
 }

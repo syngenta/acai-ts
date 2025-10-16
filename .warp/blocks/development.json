@@ -1,0 +1,189 @@
+{
+  "name": "Acai-TS Development Blocks",
+  "description": "Reusable command blocks for acai-ts development scenarios",
+  "blocks": [
+    {
+      "id": "quick-start",
+      "name": "🚀 Quick Start",
+      "description": "Set up development environment and run initial checks",
+      "commands": [
+        "echo '🔧 Setting up acai-ts development environment...'",
+        "npm install",
+        "npm run type-check",
+        "npm test",
+        "echo '✅ Development environment ready! Try: npm run build'"
+      ]
+    },
+    {
+      "id": "full-build-check",
+      "name": "🏗️ Full Build & Check",
+      "description": "Complete build process with verification",
+      "commands": [
+        "echo '🧹 Cleaning previous build...'",
+        "npm run clean",
+        "echo '🔍 Type checking...'",
+        "npm run type-check",
+        "echo '🎨 Linting...'", 
+        "npm run lint",
+        "echo '🏗️ Building (ESM + CJS)...'",
+        "npm run build",
+        "echo '📦 Verifying build outputs:'",
+        "ls -la dist/",
+        "echo '📊 Build size analysis:'",
+        "du -sh dist/*",
+        "echo '✅ Build complete and verified!'"
+      ]
+    },
+    {
+      "id": "test-suite",
+      "name": "🧪 Complete Test Suite",
+      "description": "Run comprehensive testing with coverage",
+      "commands": [
+        "echo '🧪 Running complete test suite...'",
+        "npm run test:coverage",
+        "echo '📊 Coverage report generated'",
+        "echo '🌐 Opening coverage report...'",
+        "open coverage/lcov-report/index.html"
+      ]
+    },
+    {
+      "id": "quality-gate",
+      "name": "✅ Quality Gate",
+      "description": "All quality checks before commit/PR",
+      "commands": [
+        "echo '🚦 Running quality gate checks...'",
+        "echo '1️⃣ TypeScript compilation:'",
+        "npm run type-check",
+        "echo '2️⃣ Code linting:'",
+        "npm run lint",
+        "echo '3️⃣ Code formatting:'",
+        "npm run format:check",
+        "echo '4️⃣ Unit tests with coverage:'",
+        "npm run test:coverage",
+        "echo '5️⃣ Build verification:'",
+        "npm run build",
+        "echo '✅ All quality checks passed! Ready for commit.'"
+      ]
+    },
+    {
+      "id": "debug-build-issues",
+      "name": "🐛 Debug Build Issues",
+      "description": "Troubleshoot build and dependency issues",
+      "commands": [
+        "echo '🔍 Debugging build issues...'",
+        "echo '📦 Node/npm versions:'",
+        "node --version && npm --version",
+        "echo '🔧 TypeScript version:'",
+        "npx tsc --version",
+        "echo '🧹 Cleaning all artifacts:'",
+        "npm run clean",
+        "rm -rf node_modules package-lock.json",
+        "echo '📦 Fresh install:'",
+        "npm install",
+        "echo '🔍 Checking TypeScript config:'",
+        "npx tsc --showConfig",
+        "echo '🏗️ Attempting build:'",
+        "npm run build"
+      ]
+    },
+    {
+      "id": "publish-prep",
+      "name": "📦 Publish Preparation",  
+      "description": "Prepare package for publishing to npm",
+      "commands": [
+        "echo '📦 Preparing package for publication...'",
+        "echo '🧹 Clean build:'",
+        "npm run clean && npm run build",
+        "echo '🧪 Final test run:'",
+        "npm test",
+        "echo '📋 Package contents preview:'",
+        "npm pack --dry-run",
+        "echo '📊 Package size check:'",
+        "npm run build && tar -czf temp.tgz dist/ && ls -lh temp.tgz && rm temp.tgz",
+        "echo '✅ Package ready for publishing!'",
+        "echo '💡 Next: npm publish (if ready)'"
+      ]
+    },
+    {
+      "id": "performance-analysis",
+      "name": "⚡ Performance Analysis", 
+      "description": "Analyze build and test performance",
+      "commands": [
+        "echo '⚡ Analyzing performance...'",
+        "echo '🏗️ Build time analysis:'",
+        "time npm run build",
+        "echo '🧪 Test performance:'", 
+        "npm test -- --logHeapUsage",
+        "echo '📊 Bundle size analysis:'",
+        "du -sh dist/* | sort -hr",
+        "echo '📈 Dependency analysis:'",
+        "npm list --depth=1"
+      ]
+    },
+    {
+      "id": "docs-generation",
+      "name": "📚 Documentation Generation",
+      "description": "Generate and verify documentation",
+      "commands": [
+        "echo '📚 Generating documentation...'",
+        "npm run docs",
+        "echo '📁 Documentation files:'",
+        "find docs -name '*.html' | head -10",
+        "echo '🌐 Opening documentation:'",
+        "open docs/index.html",
+        "echo '✅ Documentation generated successfully!'"
+      ]
+    },
+    {
+      "id": "git-workflow",
+      "name": "🔄 Git Workflow",
+      "description": "Common git operations for development",
+      "commands": [
+        "echo '🔄 Git workflow helper...'",
+        "echo '📊 Current status:'",
+        "git status --short",
+        "echo '🌿 Current branch:'",
+        "git branch --show-current",
+        "echo '📝 Recent commits:'",
+        "git log --oneline -5",
+        "echo '🔍 Uncommitted changes:'",
+        "git diff --stat"
+      ]
+    },
+    {
+      "id": "dependency-audit",
+      "name": "🔒 Security & Dependency Audit",
+      "description": "Check for security issues and outdated dependencies",
+      "commands": [
+        "echo '🔒 Running security and dependency audit...'",
+        "echo '🛡️ Security audit:'",
+        "npm audit",
+        "echo '📊 Dependency tree:'",
+        "npm list --depth=2",
+        "echo '📈 Outdated packages:'",
+        "npm outdated",
+        "echo '✅ Audit complete!'"
+      ]
+    }
+  ],
+  "shortcuts": {
+    "qs": "quick-start",
+    "fbc": "full-build-check", 
+    "test": "test-suite",
+    "qg": "quality-gate",
+    "debug": "debug-build-issues",
+    "pub": "publish-prep",
+    "perf": "performance-analysis",
+    "docs": "docs-generation", 
+    "git": "git-workflow",
+    "audit": "dependency-audit"
+  },
+  "categories": {
+    "setup": ["quick-start"],
+    "development": ["full-build-check", "test-suite", "docs-generation"],
+    "quality": ["quality-gate", "performance-analysis", "dependency-audit"],
+    "troubleshooting": ["debug-build-issues"],
+    "publishing": ["publish-prep"],
+    "git": ["git-workflow"]
+  }
+}

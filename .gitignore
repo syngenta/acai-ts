@@ -143,3 +143,6 @@ docs/
 
 # Test results
 test-results/
+
+# AI Planning documents (local only)
+ai-plan/

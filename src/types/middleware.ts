@@ -32,17 +32,9 @@ export type AuthMiddleware = (request: Request, response: Response, requirements
 /**
  * Error handler middleware
  */
-export type ErrorMiddleware<Req = IRequest, Res = IResponse> = (
-    request: Req,
-    response: Res,
-    error: Error
-) => Promise<void> | void;
+export type ErrorMiddleware<Req = IRequest, Res = IResponse> = (request: Req, response: Res, error: Error) => Promise<void> | void;
 
 /**
  * Timeout handler middleware
  */
-export type TimeoutMiddleware<Req = IRequest, Res = IResponse> = (
-    request: Req,
-    response: Res,
-    error: Error
-) => Promise<void> | void;
+export type TimeoutMiddleware<Req = IRequest, Res = IResponse> = (request: Req, response: Res, error: Error) => Promise<void> | void;

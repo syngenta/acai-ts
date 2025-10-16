@@ -180,7 +180,7 @@ export class ImportManager {
         this.checkFileAndDirectoryNameUnique(tree, parts, part);
         const nextNode = tree[part];
         if (typeof nextNode === 'object' && nextNode !== null && !(nextNode instanceof Set)) {
-            this.recurseSection(nextNode as FileTree, parts, index + 1);
+            this.recurseSection(nextNode, parts, index + 1);
         }
     }
 

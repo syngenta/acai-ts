@@ -1,0 +1,105 @@
+# Warp AI Configuration for acai-ts
+# TypeScript AWS Lambda framework project
+
+project:
+  name: "acai-ts"
+  description: "DRY, configurable, declarative TypeScript library for AWS Lambdas"
+  type: "typescript"
+  framework: "aws-lambda"
+
+context:
+  # Project-specific information for AI assistant
+  tech_stack:
+    - "TypeScript 5.7+"
+    - "AWS Lambda"
+    - "Node.js 18.18.2+"
+    - "Jest (testing)"
+    - "ESLint + Prettier"
+    - "TypeDoc (documentation)"
+    - "CircleCI (CI/CD)"
+    
+  key_directories:
+    - "src/": "Main source code"
+    - "test/": "Jest test files"
+    - "dist/": "Compiled output (ESM and CJS)"
+    - "docs/": "Documentation"
+    - "coverage/": "Test coverage reports"
+    
+  important_files:
+    - "package.json": "Dependencies and scripts"
+    - "tsconfig.json": "TypeScript configuration"
+    - "jest.config.ts": "Test configuration"
+    - ".eslintrc.js": "Linting rules"
+    - "README.md": "Comprehensive project documentation"
+    
+  build_system:
+    - "dual build": "ESM and CJS outputs"
+    - "TypeScript compiler": "tsc with multiple configs"
+    - "Post-build scripts": "ESM import fixing"
+
+commands:
+  # Common development commands
+  build: "npm run build"
+  test: "npm test"
+  test_watch: "npm run test:watch"
+  test_coverage: "npm run test:coverage"
+  lint: "npm run lint"
+  lint_fix: "npm run lint:fix"
+  format: "npm run format"
+  format_check: "npm run format:check"
+  type_check: "npm run type-check"
+  docs: "npm run docs"
+  clean: "npm run clean"
+  dev: "npm run dev"
+
+patterns:
+  # Common development patterns for this project
+  router_setup: |
+    import { Router } from 'acai-ts';
+    const router = new Router({
+      basePath: '/api/v1',
+      routesPath: './src/handlers/**/*.ts'
+    });
+  
+  endpoint_class: |
+    import { BaseEndpoint, Before, Validate } from 'acai-ts';
+    export class ExampleEndpoint extends BaseEndpoint {
+      @Before(middleware)
+      @Validate({ requiredBody: 'Schema' })
+      async post(request, response) {
+        response.body = { success: true };
+        return response;
+      }
+    }
+  
+  event_handler: |
+    import { Event } from 'acai-ts/dynamodb';
+    export const handler = async (event) => {
+      const ddbEvent = new Event(event, {
+        operations: ['create', 'update']
+      });
+      for (const record of ddbEvent.records) {
+        console.log(record.body);
+      }
+    };
+
+testing:
+  # Testing patterns and commands
+  run_all_tests: "npm test"
+  run_specific_test: "npm test -- --testNamePattern='pattern'"
+  run_with_coverage: "npm run test:coverage"
+  watch_mode: "npm run test:watch"
+  ci_mode: "npm run test:ci"
+
+debugging:
+  # Common debugging scenarios
+  type_errors: "npm run type-check"
+  lint_issues: "npm run lint"
+  build_issues: "npm run clean && npm run build"
+  test_failures: "npm test -- --verbose"
+
+deployment:
+  # Build and deployment commands
+  prepare_build: "npm run clean && npm run build"
+  check_dist: "ls -la dist/"
+  verify_package: "npm pack --dry-run"

@@ -1,0 +1,158 @@
+name: "Acai-TS Testing"
+description: "Testing workflows for acai-ts TypeScript AWS Lambda framework"
+
+commands:
+  # Test Execution
+  - name: "test-all"
+    description: "Run all tests with detailed output"
+    command: |
+      echo "🧪 Running all tests..."
+      npm test -- --verbose
+      echo "✅ All tests completed!"
+
+  - name: "test-coverage"
+    description: "Run tests with coverage analysis"
+    command: |
+      echo "📊 Running tests with coverage analysis..."
+      npm run test:coverage
+      echo "📈 Coverage Summary:"
+      cat coverage/coverage-summary.json | grep -A 10 "total"
+      echo "🌐 Opening detailed coverage report..."
+      open coverage/lcov-report/index.html
+
+  - name: "test-watch"
+    description: "Start Jest in watch mode"
+    command: |
+      echo "👀 Starting Jest watcher (press 'a' to run all, 'q' to quit)..."
+      npm run test:watch
+
+  - name: "test-specific"
+    description: "Run tests matching a pattern"
+    command: |
+      echo "🎯 Enter test pattern (e.g., 'Router', 'Event', 'DynamoDB'):"
+      read -r pattern
+      echo "Running tests matching: $pattern"
+      npm test -- --testNamePattern="$pattern" --verbose
+
+  - name: "test-file"
+    description: "Run a specific test file"
+    command: |
+      echo "📁 Available test files:"
+      find test -name "*.test.ts" -type f | sed 's|test/||' | sort
+      echo "Enter test file path (without test/ prefix):"
+      read -r testfile
+      npm test -- "test/$testfile" --verbose
+
+  # Test Analysis
+  - name: "test-performance"
+    description: "Analyze test performance"
+    command: |
+      echo "⚡ Analyzing test performance..."
+      npm test -- --verbose --detectOpenHandles --logHeapUsage
+
+  - name: "test-debug"
+    description: "Run tests with debugging info"
+    command: |
+      echo "🐛 Running tests with debug information..."
+      npm test -- --verbose --detectOpenHandles --forceExit
+
+  - name: "test-ci"
+    description: "Run tests in CI mode"
+    command: |
+      echo "🚀 Running tests in CI mode..."
+      npm run test:ci
+      echo "📊 Test results saved to coverage/junit.xml"
+
+  # Test Utilities
+  - name: "test-clean"
+    description: "Clean test artifacts and cache"
+    command: |
+      echo "🧹 Cleaning test artifacts..."
+      rm -rf coverage/
+      rm -rf test-results/
+      npx jest --clearCache
+      echo "✅ Test artifacts cleaned!"
+
+  - name: "test-setup-check"
+    description: "Verify test environment setup"
+    command: |
+      echo "🔧 Checking test environment setup..."
+      echo "Jest version:"
+      npx jest --version
+      echo "TypeScript version:"
+      npx tsc --version
+      echo "Available test files:"
+      find test -name "*.test.ts" -type f | wc -l
+      echo "Jest configuration:"
+      node -e "console.log(JSON.stringify(require('./jest.config.ts').default, null, 2))"
+
+  # Coverage Analysis
+  - name: "coverage-threshold"
+    description: "Check if coverage meets thresholds"
+    command: |
+      echo "📊 Checking coverage thresholds..."
+      npm run test:coverage
+      if [ $? -eq 0 ]; then
+        echo "✅ Coverage thresholds met!"
+        echo "📈 Current coverage:"
+        npx nyc report --reporter=text-summary
+      else
+        echo "❌ Coverage thresholds not met"
+        echo "📉 See detailed report in coverage/lcov-report/"
+      fi
+
+  - name: "coverage-by-file"
+    description: "Show coverage breakdown by file"
+    command: |
+      echo "📁 Coverage breakdown by file..."
+      npm run test:coverage > /dev/null 2>&1
+      npx nyc report --reporter=text
+
+  # Test Development
+  - name: "test-scaffold"
+    description: "Create a new test file template"
+    command: |
+      echo "📝 Enter the name for the new test (e.g., 'NewClass'):"
+      read -r testname
+      testfile="test/${testname,,}.test.ts"
+      cat > "$testfile" << EOF
+      /**
+       * Tests for ${testname}
+       */
+      
+      import { describe, it, expect } from '@jest/globals';
+      // Import your class/function here
+      // import { ${testname} } from '../src/path/to/${testname,,}';
+      
+      describe('${testname}', () => {
+          it('should be defined', () => {
+              // Add your tests here
+              expect(true).toBe(true);
+          });
+          
+          describe('constructor', () => {
+              it('should create instance', () => {
+                  // Test construction
+              });
+          });
+          
+          describe('methods', () => {
+              it('should handle basic operations', () => {
+                  // Test methods
+              });
+          });
+      });
+      EOF
+      echo "✅ Test file created: $testfile"
+      echo "🔧 Opening for editing..."
+      code "$testfile" 2>/dev/null || echo "Use your preferred editor to edit $testfile"
+
+shortcuts:
+  # Quick testing shortcuts
+  "ta": "test-all"
+  "tc": "test-coverage" 
+  "tw": "test-watch"
+  "tp": "test-specific"
+  "tf": "test-file"
+  "tci": "test-ci"
+  "tclean": "test-clean"

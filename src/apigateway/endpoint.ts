@@ -89,14 +89,14 @@ export class Endpoint implements IEndpoint {
         if (reqs && typeof reqs.before === 'function') {
             return true;
         }
-        
+
         // Check decorator metadata
         const methodFunction = this.endpointModule[this.methodName] as Function;
         if (methodFunction) {
             const decoratorMiddlewares = getMetadata<BeforeMiddleware[]>(MetadataKeys.BEFORE, methodFunction);
             return Boolean(decoratorMiddlewares && decoratorMiddlewares.length > 0);
         }
-        
+
         return false;
     }
 
@@ -111,7 +111,7 @@ export class Endpoint implements IEndpoint {
         if (reqs?.before) {
             await reqs.before(request as Request, response as Response, this.requirements);
         }
-        
+
         // Execute decorator-based middleware
         const methodFunction = this.endpointModule[this.methodName] as Function;
         if (methodFunction) {
@@ -133,14 +133,14 @@ export class Endpoint implements IEndpoint {
         if (reqs && typeof reqs.after === 'function') {
             return true;
         }
-        
+
         // Check decorator metadata
         const methodFunction = this.endpointModule[this.methodName] as Function;
         if (methodFunction) {
             const decoratorMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, methodFunction);
             return Boolean(decoratorMiddlewares && decoratorMiddlewares.length > 0);
         }
-        
+
         return false;
     }
 
@@ -209,7 +209,7 @@ export class Endpoint implements IEndpoint {
         if (reqs?.after) {
             await reqs.after(request as Request, response as Response, this.requirements);
         }
-        
+
         // Execute decorator-based middleware
         const methodFunction = this.endpointModule[this.methodName] as Function;
         if (methodFunction) {

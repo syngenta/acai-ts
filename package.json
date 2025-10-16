@@ -20,6 +20,21 @@
             "import": "./dist/esm/index.js",
             "require": "./dist/cjs/index.js",
             "types": "./dist/esm/index.d.ts"
+        },
+        "./dynamodb": {
+            "import": "./dist/esm/dynamodb/index.js",
+            "require": "./dist/cjs/dynamodb/index.js",
+            "types": "./dist/esm/dynamodb/index.d.ts"
+        },
+        "./sqs": {
+            "import": "./dist/esm/sqs/index.js",
+            "require": "./dist/cjs/sqs/index.js",
+            "types": "./dist/esm/sqs/index.d.ts"
+        },
+        "./s3": {
+            "import": "./dist/esm/s3/index.js",
+            "require": "./dist/cjs/s3/index.js",
+            "types": "./dist/esm/s3/index.d.ts"
         }
     },
     "files": [

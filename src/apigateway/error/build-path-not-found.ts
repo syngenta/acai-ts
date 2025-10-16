@@ -16,10 +16,11 @@ export class BuildPathNotFoundError extends Error {
      * @param message - Error message
      */
     constructor(sourcePath: string, attemptedPaths: string[], message?: string) {
-        const defaultMessage = message ||
+        const defaultMessage =
+            message ||
             `Build output path not found for "${sourcePath}". ` +
-            `Attempted paths: ${attemptedPaths.join(', ')}. ` +
-            `Please specify 'buildOutputDir' in your router config or ensure your build output exists in one of the common directories: ['.build', 'build', 'dist', '.dist']`;
+                `Attempted paths: ${attemptedPaths.join(', ')}. ` +
+                `Please specify 'buildOutputDir' in your router config or ensure your build output exists in one of the common directories: ['.build', 'build', 'dist', '.dist']`;
 
         super(defaultMessage);
         this.sourcePath = sourcePath;

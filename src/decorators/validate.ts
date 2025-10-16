@@ -10,21 +10,35 @@ import {MetadataKeys, ValidationMetadata, setMetadata} from './metadata';
  *
  * @example
  * ```typescript
- * class UserHandler {
- *   @Validate({
- *     body: {
- *       type: 'object',
- *       required: ['name', 'email'],
- *       properties: {
- *         name: { type: 'string' },
- *         email: { type: 'string', format: 'email' }
- *       }
+ * import { Endpoint, Request, Response, Validate } from 'acai-ts';
+ *
+ * export class UsersEndpoint extends Endpoint {
+ *     // Using built-in validation features
+ *     @Validate({
+ *         requiredHeaders: ['x-api-key', 'authorization'],
+ *         requiredQuery: ['page', 'limit'],
+ *         requiredBody: 'User' // Reference to schema name
+ *     })
+ *     async post(request: Request, response: Response): Promise<Response> {
+ *         // Handler logic
+ *         return response;
  *     }
- *   })
- *   @Route('POST', '/users')
- *   async createUser(request: IRequest, response: IResponse) {
- *     // Handler logic
- *   }
+ *
+ *     // Using JSON Schema validation
+ *     @Validate({
+ *         body: {
+ *             type: 'object',
+ *             required: ['name', 'email'],
+ *             properties: {
+ *                 name: { type: 'string' },
+ *                 email: { type: 'string', format: 'email' }
+ *             }
+ *         }
+ *     })
+ *     async put(request: Request, response: Response): Promise<Response> {
+ *         // Handler logic
+ *         return response;
+ *     }
  * }
  * ```
  *

@@ -1,0 +1,126 @@
+name: "Acai-TS Development"
+description: "Common development tasks for acai-ts TypeScript AWS Lambda framework"
+
+commands:
+  # Quick Start Development
+  - name: "dev-setup"
+    description: "Set up development environment"
+    command: |
+      echo "🔧 Setting up acai-ts development environment..."
+      npm install
+      npm run type-check
+      echo "✅ Development environment ready!"
+
+  # Build and Test Workflows
+  - name: "full-build"
+    description: "Clean build with all outputs"
+    command: |
+      echo "🏗️  Starting full build process..."
+      npm run clean
+      npm run build
+      echo "📦 Checking build outputs:"
+      ls -la dist/
+      echo "✅ Build complete!"
+
+  - name: "quick-test"
+    description: "Run tests with coverage"
+    command: |
+      echo "🧪 Running tests with coverage..."
+      npm run test:coverage
+      echo "📊 Opening coverage report..."
+      open coverage/lcov-report/index.html
+
+  - name: "watch-tests"
+    description: "Start test watcher"
+    command: |
+      echo "👀 Starting test watcher..."
+      npm run test:watch
+
+  # Code Quality Workflows
+  - name: "quality-check"
+    description: "Run all code quality checks"
+    command: |
+      echo "🔍 Running code quality checks..."
+      echo "📝 TypeScript type checking..."
+      npm run type-check
+      echo "🎨 Linting..."
+      npm run lint
+      echo "💄 Format checking..."
+      npm run format:check
+      echo "✅ All quality checks passed!"
+
+  - name: "fix-code"
+    description: "Auto-fix linting and formatting issues"
+    command: |
+      echo "🔧 Auto-fixing code issues..."
+      npm run lint:fix
+      npm run format
+      echo "✅ Code fixed and formatted!"
+
+  # Documentation
+  - name: "build-docs"
+    description: "Generate and open documentation"
+    command: |
+      echo "📚 Generating documentation..."
+      npm run docs
+      echo "🌐 Opening documentation..."
+      open docs/index.html
+
+  # CI/CD Simulation
+  - name: "ci-simulation"
+    description: "Simulate CI/CD pipeline locally"
+    command: |
+      echo "🚀 Simulating CI/CD pipeline..."
+      echo "1. Installing dependencies..."
+      npm ci
+      echo "2. Type checking..."
+      npm run type-check
+      echo "3. Linting..."
+      npm run lint
+      echo "4. Running tests..."
+      npm run test:ci
+      echo "5. Building..."
+      npm run build
+      echo "✅ CI/CD simulation complete!"
+
+  # Package Management
+  - name: "check-package"
+    description: "Verify package contents before publishing"
+    command: |
+      echo "📦 Checking package contents..."
+      npm run build
+      npm pack --dry-run
+      echo "📋 Package files:"
+      npm run build && tar -tzf *.tgz | head -20
+      rm -f *.tgz
+
+  # Development Utilities  
+  - name: "clean-all"
+    description: "Clean all generated files and reinstall"
+    command: |
+      echo "🧹 Cleaning all generated files..."
+      npm run clean
+      rm -rf node_modules
+      rm -f package-lock.json
+      echo "📦 Reinstalling dependencies..."
+      npm install
+      echo "✅ Clean install complete!"
+
+  - name: "dependency-audit"
+    description: "Check for security vulnerabilities"
+    command: |
+      echo "🔐 Auditing dependencies..."
+      npm audit
+      echo "📊 Dependency tree:"
+      npm list --depth=1
+
+shortcuts:
+  # Quick access shortcuts
+  "b": "full-build"
+  "t": "quick-test" 
+  "tw": "watch-tests"
+  "q": "quality-check"
+  "f": "fix-code"
+  "d": "build-docs"
+  "ci": "ci-simulation"
+  "c": "clean-all"

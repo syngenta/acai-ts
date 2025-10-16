@@ -137,7 +137,7 @@ export class Validator implements IValidator {
                     source: string,
                     code: number
                 ) => Promise<void> | void;
-                await method.call(this, response, requirement, part as unknown as Record<string, unknown>, source, code);
+                await method.call(this, response, requirement, part as Record<string, unknown>, source, code);
             }
         }
     }
@@ -212,13 +212,7 @@ export class Validator implements IValidator {
      */
     // @ts-ignore - Method called dynamically via string key
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    private validateAvailableFields(
-        response: IResponse,
-        available: any,
-        sent: any,
-        source: string,
-        code: number
-    ): void {
+    private validateAvailableFields(response: IResponse, available: any, sent: any, source: string, code: number): void {
         Object.keys(sent).forEach((field: string) => {
             if (!available.includes(field)) {
                 response.code = code;
@@ -237,13 +231,7 @@ export class Validator implements IValidator {
      */
     // @ts-ignore - Method called dynamically via string key
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    private validateRequiredFields(
-        response: IResponse,
-        required: any,
-        sent: any,
-        source: string,
-        code: number
-    ): void {
+    private validateRequiredFields(response: IResponse, required: any, sent: any, source: string, code: number): void {
         required.forEach((field: string) => {
             if (sent[field] === undefined) {
                 response.code = code;
@@ -262,13 +250,7 @@ export class Validator implements IValidator {
      */
     // @ts-ignore - Method called dynamically via string key
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    private async validateApigatewayBody(
-        response: IResponse,
-        requirement: any,
-        sent: unknown,
-        _: string,
-        code: number
-    ): Promise<void> {
+    private async validateApigatewayBody(response: IResponse, requirement: any, sent: unknown, _: string, code: number): Promise<void> {
         const errors = (await this.schema.validate(requirement, sent)) as SchemaError[] | null | undefined;
         if (errors && errors.length > 0) {
             response.code = code;

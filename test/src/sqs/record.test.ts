@@ -146,6 +146,7 @@ describe('Test SQS Record Client', () => {
             };
             const testRecord = new Record(rawRecord);
             expect(testRecord.messageAttributes).toHaveProperty('testBinary');
+            expect(testRecord.messageAttributes.testBinary).toEqual(Buffer.from('test'));
         });
 
         it('should parse dataType only attributes', () => {

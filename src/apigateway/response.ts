@@ -150,7 +150,7 @@ export class Response<TBody = unknown> implements IResponse<TBody> {
      */
     get errors(): ErrorObject[] {
         if (this.hasErrors && this.bodyValue && typeof this.bodyValue === 'object' && 'errors' in this.bodyValue) {
-            return (this.bodyValue as ResponseBodyWithErrors).errors;
+            return this.bodyValue.errors;
         }
         return [];
     }

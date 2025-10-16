@@ -85,7 +85,7 @@ export class Event<T = unknown> implements IEvent<T> {
      */
     get records(): T[] {
         // If records have already been processed (via process()), return them
-        if (this.recordsList.length > 0 || (this.before || this.requiredBody || this.getObject)) {
+        if (this.recordsList.length > 0 || this.before || this.requiredBody || this.getObject) {
             return this.recordsList;
         }
 

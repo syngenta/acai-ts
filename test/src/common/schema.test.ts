@@ -167,5 +167,23 @@ describe('Test Schema: src/common/schema', () => {
                 }
             }
         });
+
+        it('should auto-load schema when autoLoad is called', () => {
+            const schema = Schema.fromFilePath('test/mocks/openapi.yml');
+            expect(() => schema.autoLoad()).not.toThrow();
+        });
+
+        it('should validate with object entity schema', async () => {
+            const schema = Schema.fromFilePath('test/mocks/openapi.yml');
+            const objectEntity = {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' }
+                },
+                required: ['name']
+            };
+            const errors = await schema.validate(objectEntity, { name: 'test' });
+            expect(errors).toBe(null);
+        });
     });
 });

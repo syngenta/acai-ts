@@ -1,0 +1,161 @@
+# Warp Terminal Configuration for acai-ts
+# Optimizes terminal experience for TypeScript AWS Lambda development
+
+terminal:
+  theme: "dark"  # or "light" based on preference
+  font_size: 14
+  show_git_branch: true
+  show_directory_path: true
+
+aliases:
+  # npm script shortcuts
+  b: "npm run build"
+  bb: "npm run build && ls -la dist/"
+  bc: "npm run build:cjs"
+  be: "npm run build:esm"
+  c: "npm run clean"
+  cb: "npm run clean && npm run build"
+  
+  # Development shortcuts  
+  dev: "npm run dev"
+  lint: "npm run lint"
+  lintfix: "npm run lint:fix"
+  format: "npm run format"
+  formatcheck: "npm run format:check"
+  tc: "npm run type-check"
+  
+  # Testing shortcuts
+  t: "npm test"
+  tw: "npm run test:watch"
+  tcov: "npm run test:coverage"
+  tci: "npm run test:ci"
+  
+  # Documentation
+  docs: "npm run docs"
+  docopen: "npm run docs && open docs/index.html"
+  
+  # Git shortcuts specific to project
+  gs: "git status"
+  ga: "git add ."
+  gc: "git commit -m"
+  gp: "git push"
+  gl: "git pull"
+  gb: "git branch"
+  gco: "git checkout"
+  
+  # Project structure navigation
+  cdsrc: "cd src"
+  cdtest: "cd test" 
+  cddist: "cd dist"
+  cddocs: "cd docs"
+  
+  # File operations
+  ll: "ls -la"
+  tree: "find . -type d -name node_modules -prune -o -type f -print | head -20"
+  size: "du -sh * | sort -hr"
+  
+  # Package management
+  ni: "npm install"
+  nid: "npm install --save-dev"
+  nu: "npm update"
+  na: "npm audit"
+  naf: "npm audit fix"
+  
+  # AWS/Lambda specific
+  pack: "npm pack --dry-run"
+  checksize: "npm run build && du -sh dist/"
+  
+  # Quick project info
+  info: |
+    echo "📦 acai-ts - TypeScript AWS Lambda Framework"
+    echo "🔗 Repository: https://github.com/syngenta/acai-ts"
+    echo "📚 Docs: https://syngenta.github.io/acai-ts-docs/"
+    echo ""
+    echo "📁 Project Structure:"
+    echo "  src/     - TypeScript source code"
+    echo "  test/    - Jest test files"  
+    echo "  dist/    - Compiled output (ESM + CJS)"
+    echo "  docs/    - Generated documentation"
+    echo ""
+    echo "🚀 Quick Commands:"
+    echo "  b        - Build project"
+    echo "  t        - Run tests"
+    echo "  tw       - Test watcher"
+    echo "  lint     - Check code quality"
+    echo "  docs     - Generate documentation"
+
+environment:
+  # Environment variables for development
+  NODE_ENV: "development"
+  DEBUG: "*"
+  
+  # TypeScript specific
+  TS_NODE_COMPILER_OPTIONS: '{"module":"commonjs"}'
+  
+  # Testing
+  JEST_WORKERS: "50%"
+
+prompt:
+  # Custom prompt elements
+  git_status: true
+  node_version: true
+  npm_version: false
+  current_package: true
+  typescript_errors: true
+
+autocomplete:
+  # Enhanced autocomplete for this project
+  npm_scripts: true
+  git_branches: true
+  file_paths: true
+  
+  # Custom completions for common patterns
+  custom:
+    - pattern: "npm run"
+      suggestions: 
+        - "build"
+        - "test" 
+        - "test:watch"
+        - "test:coverage"
+        - "lint"
+        - "lint:fix"
+        - "format"
+        - "format:check"
+        - "type-check"
+        - "docs"
+        - "clean"
+        - "dev"
+        
+    - pattern: "git checkout"
+      suggestions:
+        - "main"
+        - "develop"  
+        - "feature/"
+        - "fix/"
+        - "release/"
+
+# Project-specific key bindings  
+keybindings:
+  # Ctrl+B for build
+  "ctrl+b": "npm run build"
+  # Ctrl+T for test
+  "ctrl+t": "npm test"
+  # Ctrl+L for lint
+  "ctrl+l": "npm run lint"
+  # Ctrl+D for docs
+  "ctrl+d": "npm run docs"
+
+# Quick access to project files
+bookmarks:
+  - name: "Main entry"
+    path: "./src/index.ts"
+  - name: "Package config" 
+    path: "./package.json"
+  - name: "TypeScript config"
+    path: "./tsconfig.json"
+  - name: "Jest config"
+    path: "./jest.config.ts"
+  - name: "Lint config"
+    path: "./.eslintrc.js"
+  - name: "README"
+    path: "./README.md"

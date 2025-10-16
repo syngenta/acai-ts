@@ -90,6 +90,13 @@ describe('Test S3 Record Client', () => {
             expect(testRecord.operation).toBe('unknown');
         });
 
+        it('should have operation as update for objectrestore', () => {
+            const rawRecord = JSON.parse(JSON.stringify(mockData.getData().Records[0]));
+            rawRecord.eventName = 's3:ObjectRestore:Completed';
+            const testRecord = new Record(rawRecord);
+            expect(testRecord.operation).toBe('update');
+        });
+
         it('should have isCreated as true for create operations', () => {
             expect(record.isCreated).toBe(true);
         });

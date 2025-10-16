@@ -6,5 +6,6 @@ export * from './request';
 export * from './response';
 export * from './router';
 export * from './endpoint';
+export * from './base-endpoint';
 export * from './error';
 export * from './resolver';

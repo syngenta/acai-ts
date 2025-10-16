@@ -124,4 +124,13 @@ describe('Test DynamoDB Record Client: src/dynamodb/record.ts', () => {
             expect(record.operation).toBe('delete');
         });
     });
+
+    describe('test edge cases', () => {
+        it('should return empty object when no Keys exist', () => {
+            const rawRecord = JSON.parse(JSON.stringify(mockData.getData().Records[0]));
+            delete rawRecord.dynamodb.Keys;
+            const testRecord = new Record(rawRecord);
+            expect(testRecord.keys).toEqual({});
+        });
+    });
 });

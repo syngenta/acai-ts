@@ -9,14 +9,9 @@
 import 'reflect-metadata';
 
 // API Gateway exports
-export {Router, Request, Response, Endpoint} from './apigateway';
+export {Router, Request, Response, Endpoint, BaseEndpoint} from './apigateway';
 export {ApiError, ApiTimeout} from './apigateway/error';
-export {
-    RouteResolver,
-    ResolverCache,
-    ImportManager,
-    PatternResolver
-} from './apigateway/resolver';
+export {RouteResolver, ResolverCache, ImportManager, PatternResolver} from './apigateway/resolver';
 
 // Common utilities exports
 export {Logger} from './common/logger';

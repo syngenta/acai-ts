@@ -229,11 +229,20 @@ describe('Test Validator', () => {
     describe('test response validation with requirements', () => {
         it('should handle response validation with no response requirement', async () => {
             const response = new Response();
-            response.body = {test: 'data'};
-            const requirements = {};
-
-            await validator.validateResponse(response, requirements);
+            response.body = {data: 'test'};
+            await validator.validateResponse(response, {});
             expect(response.hasErrors).toBe(false);
+        });
+
+        it('should validate response with requirements and add errors on validation failure', async () => {
+            const response = new Response();
+            response.body = {invalid: 'data'};
+            const requirements = {
+                response: 'v1-test-request' as any // This should fail validation
+            };
+            await validator.validateResponse(response, requirements as any);
+            expect(response.hasErrors).toBe(true);
+            expect(response.code).toBe(422);
         });
     });
 

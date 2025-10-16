@@ -192,4 +192,82 @@ describe('Test Response: src/apigateway/response.ts', () => {
             expect(response.contentType).toBe('application/json');
         });
     });
+
+    describe('test headers setter', () => {
+        it('should set header using object notation', () => {
+            const response = new Response();
+            response.headers = {key: 'X-Test-Header', value: 'test-value'};
+            expect(response.headers['X-Test-Header']).toBe('test-value');
+        });
+    });
+
+    describe('test statusCode alias', () => {
+        it('should get statusCode same as code', () => {
+            const response = new Response();
+            response.code = 201;
+            expect(response.statusCode).toBe(201);
+        });
+
+        it('should set statusCode same as code', () => {
+            const response = new Response();
+            response.statusCode = 202;
+            expect(response.code).toBe(202);
+        });
+    });
+
+    describe('test errors getter edge cases', () => {
+        it('should return empty array when no errors exist', () => {
+            const response = new Response();
+            response.body = {data: 'test'};
+            expect(response.errors).toEqual([]);
+        });
+    });
+
+    describe('test addBodyProperty', () => {
+        it('should add property to existing body object', () => {
+            const response = new Response();
+            response.body = {existing: 'data'};
+            response.addBodyProperty('newProp', 'newValue');
+            expect(response.rawBody).toEqual({
+                existing: 'data',
+                newProp: 'newValue'
+            });
+        });
+
+        it('should not add property when body has errors', () => {
+            const response = new Response();
+            response.setError('test', 'error message');
+            response.addBodyProperty('newProp', 'newValue');
+            // Should only have errors, not the new property
+            expect('newProp' in (response.rawBody as any)).toBe(false);
+        });
+    });
+
+    describe('test addBodyProperties', () => {
+        it('should add multiple properties to existing body object', () => {
+            const response = new Response();
+            response.body = {existing: 'data'};
+            response.addBodyProperties({
+                prop1: 'value1',
+                prop2: 'value2'
+            });
+            expect(response.rawBody).toEqual({
+                existing: 'data',
+                prop1: 'value1',
+                prop2: 'value2'
+            });
+        });
+
+        it('should not add properties when body has errors', () => {
+            const response = new Response();
+            response.setError('test', 'error message');
+            response.addBodyProperties({
+                prop1: 'value1',
+                prop2: 'value2'
+            });
+            // Should only have errors, not the new properties
+            expect('prop1' in (response.rawBody as any)).toBe(false);
+            expect('prop2' in (response.rawBody as any)).toBe(false);
+        });
+    });
 });

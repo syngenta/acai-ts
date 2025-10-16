@@ -215,10 +215,48 @@ export class PatternResolver {
     private getEndpointPath(fileTree: FileTree, {patternRoot, requestPath}: FilePaths): string {
         const splitPattern = this.pattern.split(this.sep);
         const filePattern = splitPattern[splitPattern.length - 1];
-        this.findRequestedFileWithinFileTree(fileTree, filePattern, requestPath.split(this.sep), 0);
+        const splitRequest = requestPath.split(this.sep);
+
+        // Navigate to the correct starting point in the fileTree
+        const startingTree = this.navigateToPatternRoot(fileTree, patternRoot);
+
+        this.findRequestedFileWithinFileTree(startingTree, filePattern, splitRequest, 0);
         const importFilePath = this.importer.getImportPath(this.importParts);
         const endpointPath = `${patternRoot}/${importFilePath}`;
+
         return endpointPath;
+    }
+
+    /**
+     * Navigate the fileTree to the patternRoot location
+     * @param fileTree - File tree structure
+     * @param patternRoot - Pattern root path
+     * @returns Subtree at patternRoot location
+     */
+    private navigateToPatternRoot(fileTree: FileTree, patternRoot: string): FileTree {
+        // Remove leading './' if present
+        const cleanedRoot = patternRoot.startsWith('./') ? patternRoot.slice(2) : patternRoot;
+
+        // Split the path and navigate through the tree
+        const parts = cleanedRoot.split(this.sep).filter((p) => p.length > 0);
+
+        let currentTree: FileTree = fileTree;
+        for (const part of parts) {
+            if (part in currentTree) {
+                const next = currentTree[part];
+                if (typeof next === 'object' && next !== null && !(next instanceof Set)) {
+                    currentTree = next;
+                } else {
+                    // Can't navigate further
+                    break;
+                }
+            } else {
+                // Part not found in tree, return current level
+                break;
+            }
+        }
+
+        return currentTree;
     }
 
     /**
@@ -235,15 +273,39 @@ export class PatternResolver {
             const possibleIndex = filePattern.replace('*', 'index');
             const possibleDir = requestPart;
 
+            // Handle brace expansion patterns like *.{controller,endpoint}.js
+            let foundMatch = false;
+
             if (possibleDir in fileTree) {
                 this.handleDirectoryPath(fileTree, filePattern, possibleDir, splitRequest, index);
+                foundMatch = true;
             } else if (possibleFile in fileTree) {
                 this.importParts.push(possibleFile);
-            } else if ('__dynamicPath' in fileTree && (fileTree['__dynamicPath'] as Set<string>).size > 0) {
-                this.handleDynamicPath(fileTree, filePattern, splitRequest, index);
-            } else if (this.hasPathParams && possibleIndex in fileTree && index === splitRequest.length - 1) {
-                this.importParts.push(possibleIndex);
-            } else {
+                foundMatch = true;
+            } else if (filePattern.includes('{') && filePattern.includes('}')) {
+                // Handle brace expansion patterns
+                const expandedPatterns = this.expandBracePattern(filePattern, requestPart);
+
+                for (const expandedPattern of expandedPatterns) {
+                    if (expandedPattern in fileTree) {
+                        this.importParts.push(expandedPattern);
+                        foundMatch = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!foundMatch) {
+                if ('__dynamicPath' in fileTree && (fileTree['__dynamicPath'] as Set<string>).size > 0) {
+                    this.handleDynamicPath(fileTree, filePattern, splitRequest, index);
+                    foundMatch = true;
+                } else if (this.hasPathParams && possibleIndex in fileTree && index === splitRequest.length - 1) {
+                    this.importParts.push(possibleIndex);
+                    foundMatch = true;
+                }
+            }
+
+            if (!foundMatch) {
                 this.importer.raise404();
             }
         }
@@ -264,7 +326,7 @@ export class PatternResolver {
         } else {
             const nextTree = fileTree[possibleDir];
             if (typeof nextTree === 'object' && nextTree !== null && !(nextTree instanceof Set)) {
-                this.findRequestedFileWithinFileTree(nextTree as FileTree, filePattern, splitRequest, index + 1);
+                this.findRequestedFileWithinFileTree(nextTree, filePattern, splitRequest, index + 1);
             }
         }
     }
@@ -287,9 +349,32 @@ export class PatternResolver {
         } else if (!part.includes('.js')) {
             const nextTree = fileTree[part];
             if (typeof nextTree === 'object' && nextTree !== null && !(nextTree instanceof Set)) {
-                this.findRequestedFileWithinFileTree(nextTree as FileTree, filePattern, splitRequest, index + 1);
+                this.findRequestedFileWithinFileTree(nextTree, filePattern, splitRequest, index + 1);
             }
         }
+    }
+
+    /**
+     * Expand brace pattern like *.{controller,endpoint}.js to individual patterns
+     * @param filePattern - File pattern with braces
+     * @param requestPart - Request part to substitute for *
+     * @returns Array of expanded patterns
+     */
+    private expandBracePattern(filePattern: string, requestPart: string): string[] {
+        const braceMatch = filePattern.match(/\{([^}]+)\}/);
+        if (!braceMatch) {
+            return [filePattern.replace('*', requestPart)];
+        }
+
+        const options = braceMatch[1].split(',');
+        const expandedPatterns: string[] = [];
+
+        for (const option of options) {
+            const expandedPattern = filePattern.replace('*', requestPart).replace(braceMatch[0], option);
+            expandedPatterns.push(expandedPattern);
+        }
+
+        return expandedPatterns;
     }
 
     /**
@@ -304,10 +389,38 @@ export class PatternResolver {
         const dirTree = fileTree[possibleDir];
 
         if (typeof dirTree === 'object' && dirTree !== null && !(dirTree instanceof Set)) {
+            let foundFile = false;
+
             if (mvvmFile in dirTree) {
                 this.importParts.push(mvvmFile);
+                foundFile = true;
             } else if (indexFile in dirTree) {
                 this.importParts.push(indexFile);
+                foundFile = true;
+            } else if (filePattern.includes('{') && filePattern.includes('}')) {
+                // Handle brace expansion for files in directory
+                const expandedMvvmPatterns = this.expandBracePattern(filePattern, possibleDir);
+                const expandedIndexPatterns = this.expandBracePattern(filePattern, 'index');
+
+                // Try mvvm patterns first
+                for (const pattern of expandedMvvmPatterns) {
+                    if (pattern in dirTree) {
+                        this.importParts.push(pattern);
+                        foundFile = true;
+                        break;
+                    }
+                }
+
+                // Then try index patterns
+                if (!foundFile) {
+                    for (const pattern of expandedIndexPatterns) {
+                        if (pattern in dirTree) {
+                            this.importParts.push(pattern);
+                            foundFile = true;
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

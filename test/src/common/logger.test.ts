@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeAll} from '@jest/globals';
+import {describe, it, expect, beforeAll, jest} from '@jest/globals';
 import {Logger} from '../../../src/common/logger';
 
 describe('Test Logger: src/common/logger.ts', () => {
@@ -71,6 +71,44 @@ describe('Test Logger: src/common/logger.ts', () => {
             const logger = new Logger();
             logger.log('works', 'still works');
             expect(true).toBe(true);
+        });
+    });
+
+    describe('test error handling', () => {
+        it('should handle invalid log levels gracefully', () => {
+            const logger = new Logger();
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            
+            // This should trigger the error path in shouldLog
+            (logger as any).shouldLog('INVALID_LEVEL');
+            
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
+        });
+
+        it('should handle invalid MIN_LOG_LEVEL gracefully', () => {
+            process.env['MIN_LOG_LEVEL'] = 'INVALID';
+            const logger = new Logger();
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            
+            logger.info('test');
+            
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
+            delete process.env['MIN_LOG_LEVEL'];
+        });
+
+        it('should handle callback errors gracefully', () => {
+            const errorCallback = () => {
+                throw new Error('Callback error');
+            };
+            const logger = new Logger({ callback: errorCallback });
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            
+            logger.info('test');
+            
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
     });
 });

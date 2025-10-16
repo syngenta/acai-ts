@@ -10,24 +10,27 @@ import {MetadataKeys, getMetadata, setMetadata} from './metadata';
  *
  * @example
  * ```typescript
- * @Before(validateToken)
- * @Before(checkPermissions)
- * @Route('GET', '/users')
- * export const getUsers = async (request: IRequest, response: IResponse) => {
- *   // Handler logic
- * };
+ * import { Endpoint, Request, Response, Before } from 'acai-ts';
+ *
+ * export class UsersEndpoint extends Endpoint {
+ *     @Before(validateToken)
+ *     @Before(checkPermissions)
+ *     async get(request: Request, response: Response): Promise<Response> {
+ *         // Handler logic
+ *         return response;
+ *     }
+ * }
  * ```
  *
- * @param middleware - Middleware function to execute before the handler
+ * @param middlewares - Middleware functions to execute before the handler
  */
-export function Before(...middlewares: BeforeMiddleware[]): <T extends Function>(target: T) => T {
-    return function <T extends Function>(target: T): T {
-        const existingMiddlewares = getMetadata<BeforeMiddleware[]>(MetadataKeys.BEFORE, target as object) || [];
+export function Before(...middlewares: BeforeMiddleware[]): MethodDecorator {
+    return function (target: object, propertyKey: string | symbol, _descriptor: PropertyDescriptor): void {
+        const existingMiddlewares = getMetadata<BeforeMiddleware[]>(MetadataKeys.BEFORE, target, propertyKey) || [];
 
-        // Prepend new middlewares (so they execute in the order they're declared)
+        // Append new middlewares (so they execute in the order they're declared)
         const allMiddlewares = [...existingMiddlewares, ...middlewares];
 
-        setMetadata(MetadataKeys.BEFORE, allMiddlewares, target as object);
-        return target;
+        setMetadata(MetadataKeys.BEFORE, allMiddlewares, target, propertyKey);
     };
 }

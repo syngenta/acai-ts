@@ -5,7 +5,9 @@
 import {ImportManager} from './import-manager';
 import {PatternResolver} from './pattern-resolver';
 import {ResolverCache} from './cache';
-import {IRouterConfig} from '../../types';
+import {IRouterConfig, BeforeMiddleware, AfterMiddleware} from '../../types';
+import {BaseEndpoint} from '../base-endpoint';
+import {MetadataKeys, getMetadata, setMetadata, TimeoutMetadata, ValidationMetadata, AuthMetadata} from '../../decorators/metadata';
 
 // Forward declaration for Endpoint - will be imported from endpoint module
 type Endpoint = unknown;
@@ -108,16 +110,31 @@ export class RouteResolver {
     getEndpoint(request: RequestWithPath): Endpoint {
         const endpointModule = this.getEndpointModule(request) as EndpointModule;
 
-        if (this.resolver.hasPathParams) {
-            this.configurePathParams(endpointModule, request);
+        // Try to find and instantiate BaseEndpoint class (Pattern 2: Class-based decorators)
+        const EndpointClass = this.findEndpointClass(endpointModule);
+
+        let finalModule: EndpointModule;
+
+        if (EndpointClass) {
+            // Pattern 2: Class-based Endpoint found
+            const instance = new EndpointClass();
+            finalModule = this.convertClassToModule(instance);
+        } else {
+            // Pattern 1: Requirements pattern (use module as-is)
+            finalModule = endpointModule;
         }
 
-        if (typeof endpointModule[request.method] !== 'function') {
+        // Configure path params if needed
+        if (this.resolver.hasPathParams) {
+            this.configurePathParams(finalModule, request);
+        }
+
+        // Verify method exists
+        if (typeof finalModule[request.method] !== 'function') {
             this.importer.raise403();
         }
 
-        // Return endpoint module for now - will be wrapped in Endpoint class in Phase 3.4
-        return {endpointModule, method: request.method} as unknown as Endpoint;
+        return {endpointModule: finalModule, method: request.method} as unknown;
     }
 
     /**
@@ -157,11 +174,7 @@ export class RouteResolver {
      */
     private checkRequiredPathRequirement(endpoint: EndpointModule, request: RequestWithPath): void {
         const reqs = (endpoint as unknown as {requirements?: {[key: string]: MethodRequirements}}).requirements;
-        if (
-            !reqs ||
-            !reqs[request.method] ||
-            !reqs[request.method].requiredPath
-        ) {
+        if (!reqs || !reqs[request.method] || !reqs[request.method].requiredPath) {
             this.importer.raise404();
         }
     }
@@ -213,5 +226,90 @@ export class RouteResolver {
         request.pathParams = pathParams;
         const basePath = (this.params as {basePath?: string}).basePath || '';
         request.route = `/${basePath}/${this.importer.cleanPath(splits.pathSplit.join(this.importer.fileSeparator))}`;
+    }
+
+    /**
+     * Find BaseEndpoint class in the module
+     * @param module - Endpoint module
+     * @returns BaseEndpoint class constructor or null
+     */
+    private findEndpointClass(module: EndpointModule): (new () => BaseEndpoint) | null {
+        // Find exported class that extends BaseEndpoint
+        for (const key in module) {
+            const exported = module[key];
+            // Check if it's a function and has BaseEndpoint in its prototype chain
+            if (typeof exported === 'function' && exported.prototype && exported.prototype instanceof BaseEndpoint) {
+                // Type assertion is safe here because we verified it extends BaseEndpoint
+                return exported as unknown as new () => BaseEndpoint;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Convert BaseEndpoint class instance to module format
+     * @param instance - BaseEndpoint instance
+     * @returns Module with bound methods and metadata
+     */
+    private convertClassToModule(instance: BaseEndpoint): EndpointModule {
+        const module: EndpointModule = {};
+
+        // Extract HTTP methods from instance
+        const methods = ['get', 'post', 'put', 'patch', 'delete'];
+        for (const method of methods) {
+            if (typeof (instance as {[key: string]: unknown})[method] === 'function') {
+                // Bind method to instance
+                const boundMethod = (instance as {[key: string]: Function})[method].bind(instance);
+
+                // Copy metadata from class method to bound function
+                this.copyMethodMetadata(instance, method, boundMethod);
+
+                // Store bound method in module
+                module[method] = boundMethod;
+            }
+        }
+
+        return module;
+    }
+
+    /**
+     * Copy decorator metadata from class method to bound function
+     * @param instance - BaseEndpoint instance
+     * @param methodName - Method name
+     * @param boundFunction - Bound function
+     */
+    private copyMethodMetadata(instance: BaseEndpoint, methodName: string, boundFunction: Function): void {
+        // Get the class prototype (where decorators store metadata)
+        const prototype = Object.getPrototypeOf(instance);
+
+        // Copy @Before metadata
+        const beforeMeta = getMetadata<BeforeMiddleware[]>(MetadataKeys.BEFORE, prototype, methodName);
+        if (beforeMeta) {
+            setMetadata(MetadataKeys.BEFORE, beforeMeta, boundFunction);
+        }
+
+        // Copy @After metadata
+        const afterMeta = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, prototype, methodName);
+        if (afterMeta) {
+            setMetadata(MetadataKeys.AFTER, afterMeta, boundFunction);
+        }
+
+        // Copy @Timeout metadata
+        const timeoutMeta = getMetadata<TimeoutMetadata>(MetadataKeys.TIMEOUT, prototype, methodName);
+        if (timeoutMeta) {
+            setMetadata(MetadataKeys.TIMEOUT, timeoutMeta, boundFunction);
+        }
+
+        // Copy @Validate metadata
+        const validateMeta = getMetadata<ValidationMetadata>(MetadataKeys.VALIDATE, prototype, methodName);
+        if (validateMeta) {
+            setMetadata(MetadataKeys.VALIDATE, validateMeta, boundFunction);
+        }
+
+        // Copy @Auth metadata (if needed in the future)
+        const authMeta = getMetadata<AuthMetadata>(MetadataKeys.AUTH, prototype, methodName);
+        if (authMeta) {
+            setMetadata(MetadataKeys.AUTH, authMeta, boundFunction);
+        }
     }
 }
