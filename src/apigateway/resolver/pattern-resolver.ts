@@ -3,6 +3,8 @@
  */
 
 import {ImportManager} from './import-manager';
+import {BuildPathNotFoundError} from '../error/build-path-not-found';
+import * as glob from 'glob';
 
 /**
  * File tree structure
@@ -25,6 +27,7 @@ interface PatternResolverParams {
     basePath?: string;
     handlerPattern?: string;
     routesPath?: string; // New unified parameter name
+    buildOutputDir?: string; // Build output directory for TypeScript compilation
 }
 
 /**
@@ -56,8 +59,108 @@ export class PatternResolver {
         this.importer = importer;
         this.sep = importer.fileSeparator;
         this.basePath = params.basePath || '';
-        // Support both handlerPattern (legacy) and routesPath (new unified name)
-        this.pattern = params.handlerPattern || params.routesPath || '';
+
+        // Get pattern from routesPath or handlerPattern (legacy)
+        let pattern = params.routesPath || params.handlerPattern || '';
+
+        // Auto-append **/*.ts if no glob pattern detected
+        // This allows users to specify just a directory path (e.g., 'src/handlers')
+        // and it will automatically become 'src/handlers/**/*.ts'
+        if (pattern && !pattern.includes('*')) {
+            const separator = pattern.endsWith('/') ? '' : '/';
+            pattern = pattern + separator + '**/*.ts';
+        }
+
+        // Transform TypeScript source path to build output path if needed
+        pattern = this.transformPathForBuild(pattern, params.buildOutputDir);
+
+        this.pattern = pattern;
+    }
+
+    /**
+     * Transform TypeScript source path to build output path
+     * @param sourcePath - Original source path
+     * @param buildOutputDir - Optional build output directory
+     * @returns Transformed path
+     */
+    private transformPathForBuild(sourcePath: string, buildOutputDir?: string): string {
+        // Only transform if path contains .ts or .tsx extensions
+        if (!sourcePath.match(/\.tsx?(\*)?$/)) {
+            return sourcePath;
+        }
+
+        // Transform extension from .ts/.tsx to .js
+        const jsPath = sourcePath.replace(/\.tsx?(\*)?$/, '.js$1');
+
+        // If buildOutputDir is explicitly provided, use it
+        if (buildOutputDir) {
+            const transformedPath = this.prependBuildDir(jsPath, buildOutputDir);
+            if (!this.pathHasMatches(transformedPath)) {
+                throw new BuildPathNotFoundError(sourcePath, [transformedPath]);
+            }
+            return transformedPath;
+        }
+
+        // Auto-detect build directory from common paths
+        const commonBuildDirs = ['.build', 'build', 'dist', '.dist'];
+        const attemptedPaths: string[] = [];
+
+        for (const buildDir of commonBuildDirs) {
+            const transformedPath = this.prependBuildDir(jsPath, buildDir);
+            attemptedPaths.push(transformedPath);
+
+            if (this.pathHasMatches(transformedPath)) {
+                return transformedPath;
+            }
+        }
+
+        // Fall back to source .ts files if no build output found (dev mode with ts-node)
+        if (this.pathHasMatches(sourcePath)) {
+            return sourcePath;
+        }
+
+        // No valid build path or source files found
+        throw new BuildPathNotFoundError(sourcePath, attemptedPaths);
+    }
+
+    /**
+     * Prepend build directory to path
+     * @param path - File path
+     * @param buildDir - Build directory
+     * @returns Path with build directory prepended
+     */
+    private prependBuildDir(path: string, buildDir: string): string {
+        // Handle relative paths starting with './'
+        if (path.startsWith('./')) {
+            return `./${buildDir}/${path.slice(2)}`;
+        }
+
+        // Handle absolute paths - insert build directory before /src/
+        if (path.startsWith('/')) {
+            // Find the position where we should insert the build directory
+            // Look for common source directory patterns
+            const srcMatch = path.match(/^(.*?)(\/src\/.*)/);
+            if (srcMatch) {
+                return `${srcMatch[1]}/${buildDir}${srcMatch[2]}`;
+            }
+        }
+
+        // Handle other relative paths
+        return `${buildDir}/${path}`;
+    }
+
+    /**
+     * Check if a glob pattern has any matching files
+     * @param pattern - Glob pattern
+     * @returns True if pattern has matches
+     */
+    private pathHasMatches(pattern: string): boolean {
+        try {
+            const matches = glob.sync(pattern, {nodir: true});
+            return matches.length > 0;
+        } catch (error) {
+            return false;
+        }
     }
 
     /**

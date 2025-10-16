@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **basePath Configuration**: New `basePath` option in Router configuration to strip prefixes from incoming requests
   - Useful for API Gateway custom domains, stage names, or service prefixes (e.g., `/api`, `/acai-example`)
   - Works with all routing modes (directory, pattern, list)
+- **Response Body Modification Methods**: New methods for safely modifying response body in middleware
+  - `addBodyProperty(key, value)` - Add a single property to response body
+  - `addBodyProperties(properties)` - Add multiple properties at once
+  - Designed for use in after middleware to augment responses without overwriting existing data
+- **statusCode Alias**: Added `statusCode` property as an alias for `code` in Response class for improved API consistency
 
 ## [1.0.0] - 2025-10-15
 

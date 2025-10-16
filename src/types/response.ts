@@ -76,4 +76,19 @@ export interface IResponse<TBody = ResponseBody> {
      * Compress the response body with gzip
      */
     compress(): void;
+
+    /**
+     * Get raw body (unprocessed)
+     */
+    readonly rawBody: TBody | Record<string, unknown> | null;
+
+    /**
+     * Add a property to the response body
+     */
+    addBodyProperty(key: string, value: unknown): void;
+
+    /**
+     * Add multiple properties to the response body
+     */
+    addBodyProperties(properties: Record<string, unknown>): void;
 }

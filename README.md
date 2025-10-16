@@ -127,9 +127,8 @@ import { Router } from 'acai-ts';
 
 export const handler = async (event) => {
   const router = new Router({
-    mode: 'pattern',
     basePath: '/api/v1',
-    routesPath: 'src/handlers/**/*.controller.ts'
+    routesPath: './src/handlers/**/*.ts'  // Smart path - works in dev AND production!
   });
 
   return await router.route(event);
@@ -147,6 +146,8 @@ export const post = async (request, response) => {
   return response;
 };
 ```
+
+**Smart Path Detection**: Acai-TS automatically detects and transforms TypeScript source paths to build output paths! Specify `./src/handlers/**/*.ts` and it will automatically find `.build/src/handlers/**/*.js`, `dist/src/handlers/**/*.js`, etc.
 
 The router automatically maps:
 - `POST /api/v1/users` → `src/handlers/users.controller.ts` (post function)
@@ -217,108 +218,151 @@ export const handler = async (event: AWSSQSEvent) => {
 
 ## 🎨 Decorators
 
-Acai-TS provides powerful decorators for clean, declarative code:
+Acai-TS provides powerful decorators for clean, declarative code. Decorators can be used with **both classes and functions**:
 
-### `@Route(method, path)`
+### Function-Based Decorators (Recommended)
 
-Define HTTP routes for your endpoint:
-
-```typescript
-@Route('GET', '/users/{id}')
-export class GetUserEndpoint extends Endpoint {
-  async handler(request: Request, response: Response) {
-    const userId = request.pathParameters.id;
-    response.body = { id: userId };
-    return response;
-  }
-}
-```
-
-### `@Validate(schemaName)`
-
-Validate request body against OpenAPI schema:
+For a functional programming style, wrap your handler functions with decorators:
 
 ```typescript
-@Route('POST', '/users')
-@Validate('CreateUserRequest') // References #/components/schemas/CreateUserRequest
-export class CreateUserEndpoint extends Endpoint {
-  async handler(request: Request, response: Response) {
-    // request.body is validated and typed
-    return response;
-  }
-}
-```
+import 'reflect-metadata';
+import { Route, Before, After } from 'acai-ts';
 
-### `@Before(middleware)`
-
-Run middleware before handler execution:
-
-```typescript
-const authMiddleware = async (request: Request) => {
+// Before middleware
+const authMiddleware = async (request, response) => {
   if (!request.headers.authorization) {
-    throw new ApiError('Unauthorized', 401);
+    response.code = 401;
+    response.setError('auth', 'Unauthorized');
   }
 };
+
+// After middleware
+const loggingMiddleware = async (request, response) => {
+  console.log(`Response: ${response.code}`);
+};
+
+// Function with decorators - use wrapped pattern
+export const get = Before(authMiddleware)(
+  After(loggingMiddleware)(
+    Route('GET', '/users')(async (request, response) => {
+      response.body = [{ id: '1', name: 'John' }];
+      return response;
+    })
+  )
+);
+
+// POST endpoint with validation
+export const post = Route('POST', '/users')(async (request, response) => {
+  response.body = { id: '123', ...request.body };
+  return response;
+});
+```
+
+### Class-Based Decorators
+
+For an object-oriented style, use decorators on class methods:
+
+```typescript
+import { Route, Endpoint, Before, After, Auth, Timeout } from 'acai-ts';
 
 @Route('POST', '/users')
 @Before(authMiddleware)
 export class CreateUserEndpoint extends Endpoint {
   async handler(request: Request, response: Response) {
-    // Runs only if authMiddleware passes
+    response.body = { id: '123', ...request.body };
     return response;
   }
 }
 ```
 
-### `@After(middleware)`
+### Available Decorators
+
+#### `@Route(method, path)`
+
+Define HTTP routes:
+
+```typescript
+// Function style
+export const get = Route('GET', '/users/{id}')(async (request, response) => {
+  response.body = { id: request.pathParameters.id };
+  return response;
+});
+
+// Class style
+@Route('GET', '/users/{id}')
+export class GetUserEndpoint extends Endpoint {
+  async handler(request, response) {
+    response.body = { id: request.pathParameters.id };
+    return response;
+  }
+}
+```
+
+#### `@Before(middleware)`
+
+Run middleware before handler execution:
+
+```typescript
+const authCheck = async (request, response) => {
+  if (!request.headers['x-api-key']) {
+    response.code = 401;
+    response.setError('auth', 'API key required');
+  }
+};
+
+export const get = Before(authCheck)(
+  Route('GET', '/protected')(async (request, response) => {
+    response.body = { message: 'Authenticated!' };
+    return response;
+  })
+);
+```
+
+#### `@After(middleware)`
 
 Run middleware after handler execution:
 
 ```typescript
-const loggingMiddleware = async (request: Request, response: Response) => {
-  console.log(`Response: ${response.code}`);
+const addTimestamp = async (request, response) => {
+  response.body.timestamp = new Date().toISOString();
 };
 
-@Route('GET', '/users')
-@After(loggingMiddleware)
-export class GetUsersEndpoint extends Endpoint {
-  async handler(request: Request, response: Response) {
-    response.body = [{ id: '1' }];
+export const get = After(addTimestamp)(
+  Route('GET', '/data')(async (request, response) => {
+    response.body = { data: 'value' };
     return response;
-  }
-}
+  })
+);
 ```
 
-### `@Timeout(milliseconds)`
+#### `@Timeout(milliseconds)`
 
-Set request timeout:
+Set request timeout (use with class-based endpoints):
 
 ```typescript
 @Route('POST', '/heavy-task')
 @Timeout(30000) // 30 seconds
 export class HeavyTaskEndpoint extends Endpoint {
-  async handler(request: Request, response: Response) {
+  async handler(request, response) {
     await this.processHeavyTask();
     return response;
   }
 }
 ```
 
-### `@Auth(authFunction)`
+#### `@Auth(authFunction)`
 
-Authenticate requests:
+Authenticate requests (use with class-based endpoints):
 
 ```typescript
-const jwtAuth = async (request: Request) => {
+@Route('GET', '/profile')
+@Auth(async (request) => {
   const token = request.headers.authorization?.split(' ')[1];
   return verifyJWT(token);
-};
-
-@Route('GET', '/profile')
-@Auth(jwtAuth)
+})
 export class ProfileEndpoint extends Endpoint {
-  async handler(request: Request, response: Response) {
-    response.body = request.context.user; // Populated by auth
+  async handler(request, response) {
+    response.body = request.context.user;
     return response;
   }
 }
@@ -440,16 +484,51 @@ for (const user of dynamodb.records) {
 
 ```typescript
 interface RouterConfig {
-  mode?: 'directory' | 'pattern' | 'list';  // Routing mode (default: 'directory')
   basePath?: string;                    // Base path to strip from requests (e.g., '/api/v1')
   schemaPath?: string;                  // Path to OpenAPI schema file
-  routesPath?: string;                  // Path or glob pattern for handler files
-  routes?: RouteConfig[];               // Explicit route list (for 'list' mode)
-  endpoints?: Array<typeof Endpoint>;   // Decorator-based endpoints
+  routesPath: string;                   // Path to handler files with smart build detection
+                                        // Examples: './src/handlers/**/*.ts', 'src/handlers'
+                                        // Automatically transforms to build output (.js files)
+                                        // If no glob pattern (*) detected, '**/*.ts' is auto-appended
+  buildOutputDir?: string;              // Build output directory (e.g., '.build', 'dist')
+                                        // Optional: Auto-detects common directories if not specified
+                                        // Checked in order: .build, build, dist, .dist
+  endpoints?: Array<typeof Endpoint>;   // Decorator-based endpoints (class-based)
   autoValidate?: boolean;               // Validate responses (default: false)
   strictValidation?: boolean;           // Strict schema validation (default: false)
   timeout?: number;                     // Default timeout in ms
+  outputError?: boolean;                // Output detailed error messages (default: false)
+  globalLogger?: boolean;               // Enable global logging (default: false)
+  beforeAll?: BeforeMiddleware;         // Global before middleware
+  afterAll?: AfterMiddleware;           // Global after middleware
+  withAuth?: AuthMiddleware;            // Global auth middleware
+  onError?: ErrorMiddleware;            // Global error handler
+  onTimeout?: TimeoutMiddleware;        // Global timeout handler
 }
+```
+
+**Smart Path Detection:**
+
+Acai-TS automatically detects and transforms TypeScript source paths to JavaScript build output:
+
+```typescript
+// ✅ Recommended: Use source paths
+const router = new Router({
+  routesPath: './src/handlers/**/*.ts'
+});
+// Automatically finds: ./.build/src/handlers/**/*.js (or build/, dist/, .dist/)
+
+// ✅ Explicit build directory
+const router = new Router({
+  routesPath: './src/handlers/**/*.ts',
+  buildOutputDir: '.build'
+});
+// Uses: ./.build/src/handlers/**/*.js
+
+// ✅ Also works: Direct path to build output
+const router = new Router({
+  routesPath: '.build/src/handlers/**/*.js'
+});
 ```
 
 ### Request
@@ -627,6 +706,249 @@ Acai-TS eliminates boilerplate through:
 | Happy Path Programming | ✅ | ❌ | ❌ | ❌ |
 | Zero Boilerplate | ✅ | ✅ | ❌ | ❌ |
 | Minimal Dependencies | ✅ | ✅ | ❌ | ✅ |
+
+---
+
+## 🔧 Troubleshooting
+
+### Build Path Not Found Error
+
+**Error Message:**
+```
+BuildPathNotFoundError: Build output path not found for "./src/handlers/**/*.ts".
+Attempted paths: ./.build/src/handlers/**/*.js, ./build/src/handlers/**/*.js,
+./dist/src/handlers/**/*.js, ./.dist/src/handlers/**/*.js
+```
+
+**Cause:** Acai-TS cannot find compiled JavaScript files in any of the common build directories.
+
+**Solutions:**
+
+1. **Verify your build output exists:**
+   ```bash
+   # Check if your build directory exists
+   ls -la .build/  # or dist/, build/, .dist/
+   ```
+
+2. **Specify explicit build directory:**
+   ```typescript
+   const router = new Router({
+     routesPath: './src/handlers/**/*.ts',
+     buildOutputDir: 'dist'  // or '.build', 'build', etc.
+   });
+   ```
+
+3. **Use direct path to compiled files:**
+   ```typescript
+   const router = new Router({
+     routesPath: './dist/src/handlers/**/*.js'
+   });
+   ```
+
+4. **Ensure TypeScript is compiling correctly:**
+   ```bash
+   npm run build
+   ls -la .build/src/handlers/  # Verify .js files exist
+   ```
+
+### Decorator Type Errors
+
+**Error Message:**
+```
+Decorators are not valid here
+```
+
+**Cause:** Using `@` decorator syntax on exported const declarations.
+
+**Solution:** Use the wrapped function pattern:
+
+```typescript
+// ❌ Wrong: @ syntax on const
+@Route('GET', '/users')
+export const get = async (request, response) => { ... };
+
+// ✅ Correct: Wrapped pattern
+export const get = Route('GET', '/users')(async (request, response) => {
+  // handler code
+});
+```
+
+### Endpoint Not Found (404)
+
+**Problem:** Router returns 404 for existing handlers.
+
+**Checks:**
+
+1. **Verify file naming convention:**
+   ```
+   ✅ users.controller.ts    → /users
+   ✅ users/{id}.controller.ts → /users/{id}
+   ❌ usersController.ts     → Won't match
+   ```
+
+2. **Check basePath configuration:**
+   ```typescript
+   // If basePath is '/api/v1'
+   // Request: GET /api/v1/users
+   // Maps to: src/handlers/users.controller.ts
+
+   const router = new Router({
+     basePath: '/api/v1',  // Must match your API Gateway stage/path
+     routesPath: './src/handlers/**/*.ts'
+   });
+   ```
+
+3. **Verify exported method names:**
+   ```typescript
+   // File: users.controller.ts
+   export const get = async (request, response) => { ... };   // ✅ GET /users
+   export const post = async (request, response) => { ... };  // ✅ POST /users
+   export const Get = async (request, response) => { ... };   // ❌ Case-sensitive!
+   ```
+
+### TypeScript Compilation Issues
+
+**Problem:** TypeScript files in development but `.js` files not found in production.
+
+**Solution:**
+
+Ensure your build process compiles TypeScript before deployment:
+
+```json
+// package.json
+{
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "deploy": "npm run build && serverless deploy"
+  }
+}
+```
+
+### Runtime Module Not Found
+
+**Error:** `Cannot find module 'acai-ts'`
+
+**Solutions:**
+
+1. **Install dependencies:**
+   ```bash
+   npm install acai-ts reflect-metadata
+   ```
+
+2. **For serverless deployments, ensure `node_modules` is included:**
+   ```yaml
+   # serverless.yml
+   package:
+     patterns:
+       - '!node_modules/**'
+       - 'node_modules/acai-ts/**'
+       - 'node_modules/reflect-metadata/**'
+   ```
+
+### Validation Always Failing
+
+**Problem:** Schema validation fails even with correct data.
+
+**Checks:**
+
+1. **Verify schema path:**
+   ```typescript
+   const router = new Router({
+     schemaPath: './openapi.yml',  // Relative to execution directory
+     autoValidate: true
+   });
+   ```
+
+2. **Check schema references match:**
+   ```typescript
+   // In handler
+   export const requirements = {
+     post: {
+       requiredBody: 'CreateUserRequest'  // Must match schema name exactly
+     }
+   };
+   ```
+
+3. **Validate your OpenAPI schema:**
+   ```bash
+   # Use a validator
+   npx @apidevtools/swagger-cli validate openapi.yml
+   ```
+
+### Middleware Not Executing
+
+**Problem:** Before/After middleware doesn't run.
+
+**Solutions:**
+
+1. **For function decorators, ensure proper wrapping order:**
+   ```typescript
+   // ✅ Correct order: outer decorators run first
+   export const get = Before(auth)(
+     After(logging)(
+       Route('GET', '/users')(handler)
+     )
+   );
+
+   // Execution order: Before → Route → Handler → After
+   ```
+
+2. **For class decorators, ensure they're above the class:**
+   ```typescript
+   // ✅ Correct
+   @Route('POST', '/users')
+   @Before(authMiddleware)
+   export class CreateUserEndpoint extends Endpoint { ... }
+
+   // ❌ Wrong order
+   @Before(authMiddleware)
+   @Route('POST', '/users')  // Route should be first
+   export class CreateUserEndpoint extends Endpoint { ... }
+   ```
+
+3. **Verify middleware signature:**
+   ```typescript
+   // ✅ Correct signature
+   const middleware = async (request, response) => {
+     // Your logic
+   };
+
+   // ❌ Wrong - missing parameters
+   const middleware = async () => { ... };
+   ```
+
+### Performance Issues
+
+**Problem:** Slow response times or high memory usage.
+
+**Optimizations:**
+
+1. **Enable caching:**
+   ```typescript
+   const router = new Router({
+     routesPath: './src/handlers/**/*.ts',
+     cache: 'all'  // Cache route resolutions
+   });
+   ```
+
+2. **Reduce handler file scanning:**
+   ```typescript
+   // ✅ Specific pattern
+   routesPath: './src/handlers/users/**/*.ts'
+
+   // ❌ Too broad
+   routesPath: './src/**/*.ts'
+   ```
+
+3. **Use lazy loading for heavy dependencies:**
+   ```typescript
+   // Inside handler, not at module level
+   export const post = async (request, response) => {
+     const heavyLib = await import('heavy-library');
+     // Use heavyLib
+   };
+   ```
 
 ---
 

@@ -3,11 +3,9 @@
  */
 
 import {ImportManager} from './import-manager';
-import {DirectoryResolver} from './directory-resolver';
-import {ListResolver} from './list-resolver';
 import {PatternResolver} from './pattern-resolver';
 import {ResolverCache} from './cache';
-import {RoutingMode, IRouterConfig} from '../../types';
+import {IRouterConfig} from '../../types';
 
 // Forward declaration for Endpoint - will be imported from endpoint module
 type Endpoint = unknown;
@@ -61,16 +59,13 @@ interface RouteSplits {
 export {ResolverCache} from './cache';
 export {ImportManager} from './import-manager';
 export {PatternResolver} from './pattern-resolver';
-export {DirectoryResolver} from './directory-resolver';
-export {ListResolver} from './list-resolver';
 
 export class RouteResolver {
     private params: IRouterConfig;
     private importer: ImportManager;
     private cacher: ResolverCache;
     private cacheMissesCount = 0;
-    private resolver: Resolver | null = null;
-    private resolvers: Record<RoutingMode, new (params: IRouterConfig, importer: ImportManager) => Resolver>;
+    private resolver: Resolver;
 
     /**
      * Create a new RouteResolver
@@ -80,11 +75,7 @@ export class RouteResolver {
         this.params = params;
         this.importer = new ImportManager();
         this.cacher = new ResolverCache((params as {cacheSize?: number}).cacheSize, params.cache);
-        this.resolvers = {
-            pattern: PatternResolver as unknown as new (params: IRouterConfig, importer: ImportManager) => Resolver,
-            directory: DirectoryResolver as unknown as new (params: IRouterConfig, importer: ImportManager) => Resolver,
-            list: ListResolver as unknown as new (params: IRouterConfig, importer: ImportManager) => Resolver
-        };
+        this.resolver = new PatternResolver(params, this.importer) as unknown as Resolver;
     }
 
     /**
@@ -98,16 +89,14 @@ export class RouteResolver {
      * Auto-load routes
      */
     autoLoad(): void {
-        this.setResolverMode();
-        this.resolver?.autoLoad();
+        this.resolver.autoLoad();
     }
 
     /**
      * Get the active resolver
      * @returns Resolver instance
      */
-    getResolver(): Resolver | null {
-        this.setResolverMode();
+    getResolver(): Resolver {
         return this.resolver;
     }
 
@@ -117,10 +106,9 @@ export class RouteResolver {
      * @returns Endpoint instance
      */
     getEndpoint(request: RequestWithPath): Endpoint {
-        this.setResolverMode();
         const endpointModule = this.getEndpointModule(request) as EndpointModule;
 
-        if (this.resolver?.hasPathParams) {
+        if (this.resolver.hasPathParams) {
             this.configurePathParams(endpointModule, request);
         }
 
@@ -140,38 +128,14 @@ export class RouteResolver {
     private getEndpointModule(request: RequestWithPath): unknown {
         const cached = this.cacher.get(request.path);
         if (cached) {
-            if (this.resolver) {
-                this.resolver.hasPathParams = cached.isDynamic;
-            }
+            this.resolver.hasPathParams = cached.isDynamic;
             return cached.endpointModule;
         }
 
         this.cacheMissesCount++;
-        const endpointModule = this.resolver?.resolve(request);
-        this.cacher.put(request.path, endpointModule, this.resolver?.hasPathParams || false);
+        const endpointModule = this.resolver.resolve(request);
+        this.cacher.put(request.path, endpointModule, this.resolver.hasPathParams);
         return endpointModule;
-    }
-
-    /**
-     * Set resolver mode based on configuration
-     */
-    private setResolverMode(): void {
-        if (!this.resolver) {
-            const mode = this.params.mode || 'directory';
-            const ResolverClass = this.resolvers[mode];
-
-            // Map routesPath to resolver-specific parameter names
-            const resolverParams = {...this.params} as IRouterConfig & {handlerPath?: string; handlerPattern?: string};
-            if (this.params.routesPath) {
-                if (mode === 'directory') {
-                    resolverParams.handlerPath = this.params.routesPath;
-                } else if (mode === 'pattern') {
-                    resolverParams.handlerPattern = this.params.routesPath;
-                }
-            }
-
-            this.resolver = new ResolverClass(resolverParams, this.importer);
-        }
     }
 
     /**

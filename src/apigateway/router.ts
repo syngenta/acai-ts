@@ -48,7 +48,7 @@ export class Router implements IRouter {
         this.outputError = params.outputError;
         this.validateResponse = params.validateResponse;
         this.timer = new Timer();
-        this.schema = new Schema({}, {}, params as Record<string, unknown>);
+        this.schema = new Schema({}, {}, params as unknown as Record<string, unknown>);
         this.validator = new Validator(this.schema);
         this.resolver = new RouteResolver(params);
         this.logger = new Logger({callback: params.loggerCallback});
@@ -165,11 +165,13 @@ export class Router implements IRouter {
      * @param error - Error that occurred
      */
     private async handleAllErrors(event: APIGatewayProxyEvent, request: Request, response: Response, error: Error): Promise<void> {
-        if (error instanceof ApiError) {
+        // Check for more specific error types first (ApiTimeout) before checking parent types (ApiError)
+        // since ApiTimeout extends ApiError, instanceof ApiError will be true for both
+        if (error instanceof ApiTimeout) {
+            await this.handleTimeoutError(request, response, error);
+        } else if (error instanceof ApiError) {
             response.code = error.code;
             response.setError(error.key, error.message);
-        } else if (error instanceof ApiTimeout) {
-            await this.handleTimeoutError(request, response, error);
         } else {
             await this.handleInternalServerError(event, request, response, error);
         }

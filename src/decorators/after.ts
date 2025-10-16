@@ -10,25 +10,24 @@ import {MetadataKeys, getMetadata, setMetadata} from './metadata';
  *
  * @example
  * ```typescript
- * class UserHandler {
- *   @After(logResponse)
- *   @After(compressResponse)
- *   @Route('GET', '/users')
- *   async getUsers(request: IRequest, response: IResponse) {
- *     // Handler logic
- *   }
- * }
+ * @After(logResponse)
+ * @After(compressResponse)
+ * @Route('GET', '/users')
+ * export const getUsers = async (request: IRequest, response: IResponse) => {
+ *   // Handler logic
+ * };
  * ```
  *
  * @param middleware - Middleware function to execute after the handler
  */
-export function After(...middlewares: AfterMiddleware[]): MethodDecorator {
-    return function (target: object, propertyKey: string | symbol): void {
-        const existingMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, target, propertyKey) || [];
+export function After(...middlewares: AfterMiddleware[]): <T extends Function>(target: T) => T {
+    return function <T extends Function>(target: T): T {
+        const existingMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, target as object) || [];
 
         // Append new middlewares (so they execute in the order they're declared)
         const allMiddlewares = [...existingMiddlewares, ...middlewares];
 
-        setMetadata(MetadataKeys.AFTER, allMiddlewares, target, propertyKey);
+        setMetadata(MetadataKeys.AFTER, allMiddlewares, target as object);
+        return target;
     };
 }

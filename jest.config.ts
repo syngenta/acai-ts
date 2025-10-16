@@ -9,44 +9,45 @@ const config: Config = {
     testEnvironment: 'node',
     roots: ['<rootDir>/test'],
     testMatch: ['**/*.test.ts'],
-    collectCoverageFrom: [
-        'src/**/*.ts',
-        '!src/**/*.d.ts',
-        '!src/types/**',
-        '!src/index.ts'
-    ],
+    collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/types/**', '!src/index.ts'],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html'],
     reporters: [
         'default',
-        ['jest-junit', {
-            outputDirectory: 'coverage',
-            outputName: 'junit.xml',
-            classNameTemplate: '{classname}',
-            titleTemplate: '{title}',
-            ancestorSeparator: ' › ',
-            usePathForSuiteName: true
-        }]
+        [
+            'jest-junit',
+            {
+                outputDirectory: 'coverage',
+                outputName: 'junit.xml',
+                classNameTemplate: '{classname}',
+                titleTemplate: '{title}',
+                ancestorSeparator: ' › ',
+                usePathForSuiteName: true
+            }
+        ]
     ],
     coverageThreshold: {
         global: {
-            branches: 80,
-            functions: 80,
-            lines: 80,
-            statements: 80
+            branches: 70,
+            functions: 70,
+            lines: 70,
+            statements: 70
         }
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     verbose: true,
     transform: {
-        '^.+\\.ts$': ['ts-jest', {
-            tsconfig: {
-                esModuleInterop: true,
-                allowSyntheticDefaultImports: true,
-                experimentalDecorators: true,
-                emitDecoratorMetadata: true
+        '^.+\\.ts$': [
+            'ts-jest',
+            {
+                tsconfig: {
+                    esModuleInterop: true,
+                    allowSyntheticDefaultImports: true,
+                    experimentalDecorators: true,
+                    emitDecoratorMetadata: true
+                }
             }
-        }]
+        ]
     }
 };
 

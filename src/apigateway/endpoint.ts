@@ -2,7 +2,10 @@
  * Endpoint wrapper for handler execution
  */
 
-import {IEndpoint, IRequest, IResponse, ValidationRequirements, BeforeMiddleware, AfterMiddleware, DataClassConstructor} from '../types';
+import {IEndpoint, ValidationRequirements, BeforeMiddleware, AfterMiddleware, DataClassConstructor} from '../types';
+import {Request} from './request';
+import {Response} from './response';
+import {MetadataKeys, getMetadata, TimeoutMetadata, AuthMetadata} from '../decorators/metadata';
 
 /**
  * Method requirements structure
@@ -58,55 +61,127 @@ export class Endpoint implements IEndpoint {
     }
 
     /**
-     * Check if endpoint requires authentication
+     * Check if endpoint requires authentication (from requirements or decorators)
      */
     get hasAuth(): boolean {
+        // Check requirements first
         const reqs = this.requirements as {requiredAuth?: boolean} | undefined;
-        return Boolean(reqs?.requiredAuth);
+        if (reqs?.requiredAuth) {
+            return true;
+        }
+
+        // Check decorator metadata
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const authMetadata = getMetadata<AuthMetadata>(MetadataKeys.AUTH, methodFunction);
+            return Boolean(authMetadata?.required);
+        }
+
+        return false;
     }
 
     /**
-     * Check if endpoint has before middleware
+     * Check if endpoint has before middleware (from requirements or decorators)
      */
     get hasBefore(): boolean {
+        // Check requirements first
         const reqs = this.requirements as {before?: BeforeMiddleware} | undefined;
-        return Boolean(reqs && typeof reqs.before === 'function');
+        if (reqs && typeof reqs.before === 'function') {
+            return true;
+        }
+        
+        // Check decorator metadata
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const decoratorMiddlewares = getMetadata<BeforeMiddleware[]>(MetadataKeys.BEFORE, methodFunction);
+            return Boolean(decoratorMiddlewares && decoratorMiddlewares.length > 0);
+        }
+        
+        return false;
     }
 
     /**
-     * Execute before middleware
+     * Execute before middleware (from requirements or decorators)
      * @param request - Request object
      * @param response - Response object
      */
     async before(request: unknown, response: unknown): Promise<void> {
+        // Execute requirements-based middleware first
         const reqs = this.requirements as {before?: BeforeMiddleware} | undefined;
         if (reqs?.before) {
-            await reqs.before(request as IRequest, response as IResponse, this.requirements);
+            await reqs.before(request as Request, response as Response, this.requirements);
+        }
+        
+        // Execute decorator-based middleware
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const decoratorMiddlewares = getMetadata<BeforeMiddleware[]>(MetadataKeys.BEFORE, methodFunction);
+            if (decoratorMiddlewares && decoratorMiddlewares.length > 0) {
+                for (const middleware of decoratorMiddlewares) {
+                    await middleware(request as Request, response as Response, this.requirements);
+                }
+            }
         }
     }
 
     /**
-     * Check if endpoint has after middleware
+     * Check if endpoint has after middleware (from requirements or decorators)
      */
     get hasAfter(): boolean {
+        // Check requirements first
         const reqs = this.requirements as {after?: AfterMiddleware} | undefined;
-        return Boolean(reqs && typeof reqs.after === 'function');
+        if (reqs && typeof reqs.after === 'function') {
+            return true;
+        }
+        
+        // Check decorator metadata
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const decoratorMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, methodFunction);
+            return Boolean(decoratorMiddlewares && decoratorMiddlewares.length > 0);
+        }
+        
+        return false;
     }
 
     /**
-     * Check if endpoint has timeout configuration
+     * Check if endpoint has timeout configuration (from requirements or decorators)
      */
     get hasTimeout(): boolean {
+        // Check requirements first
         const reqs = this.requirements as {timeout?: number} | undefined;
-        return Boolean(reqs && Number.isInteger(reqs.timeout));
+        if (reqs && Number.isInteger(reqs.timeout)) {
+            return true;
+        }
+
+        // Check decorator metadata
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const timeoutMetadata = getMetadata<TimeoutMetadata>(MetadataKeys.TIMEOUT, methodFunction);
+            return Boolean(timeoutMetadata && Number.isInteger(timeoutMetadata.timeout));
+        }
+
+        return false;
     }
 
     /**
-     * Get timeout value
+     * Get timeout value (from requirements or decorators)
      */
     get timeout(): number | undefined {
+        // Check requirements first
         const reqs = this.requirements as {timeout?: number} | undefined;
-        return reqs?.timeout;
+        if (reqs?.timeout) {
+            return reqs.timeout;
+        }
+
+        // Check decorator metadata
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const timeoutMetadata = getMetadata<TimeoutMetadata>(MetadataKeys.TIMEOUT, methodFunction);
+            return timeoutMetadata?.timeout;
+        }
+
+        return undefined;
     }
 
     /**
@@ -124,14 +199,26 @@ export class Endpoint implements IEndpoint {
     }
 
     /**
-     * Execute after middleware
+     * Execute after middleware (from requirements or decorators)
      * @param request - Request object
      * @param response - Response object
      */
     async after(request: unknown, response: unknown): Promise<void> {
+        // Execute requirements-based middleware first
         const reqs = this.requirements as {after?: AfterMiddleware} | undefined;
         if (reqs?.after) {
-            await reqs.after(request as IRequest, response as IResponse, this.requirements);
+            await reqs.after(request as Request, response as Response, this.requirements);
+        }
+        
+        // Execute decorator-based middleware
+        const methodFunction = this.endpointModule[this.methodName] as Function;
+        if (methodFunction) {
+            const decoratorMiddlewares = getMetadata<AfterMiddleware[]>(MetadataKeys.AFTER, methodFunction);
+            if (decoratorMiddlewares && decoratorMiddlewares.length > 0) {
+                for (const middleware of decoratorMiddlewares) {
+                    await middleware(request as Request, response as Response, this.requirements);
+                }
+            }
         }
     }
 

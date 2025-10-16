@@ -81,6 +81,20 @@ export class Response<TBody = unknown> implements IResponse<TBody> {
     }
 
     /**
+     * Get HTTP status code (alias for code)
+     */
+    get statusCode(): HttpStatusCode {
+        return this.code;
+    }
+
+    /**
+     * Set HTTP status code (alias for code)
+     */
+    set statusCode(code: HttpStatusCode) {
+        this.code = code;
+    }
+
+    /**
      * Get raw body (unprocessed)
      */
     get rawBody(): TBody | ResponseBodyWithErrors | null {
@@ -182,6 +196,27 @@ export class Response<TBody = unknown> implements IResponse<TBody> {
      */
     setHeaders(headers: RecordType<string>): void {
         Object.assign(this.headersValue, headers);
+    }
+
+    /**
+     * Add a property to the response body
+     * @param key - Property key
+     * @param value - Property value
+     */
+    addBodyProperty(key: string, value: unknown): void {
+        if (this.bodyValue && typeof this.bodyValue === 'object' && !this.hasErrors) {
+            (this.bodyValue as Record<string, unknown>)[key] = value;
+        }
+    }
+
+    /**
+     * Add multiple properties to the response body
+     * @param properties - Properties object
+     */
+    addBodyProperties(properties: Record<string, unknown>): void {
+        if (this.bodyValue && typeof this.bodyValue === 'object' && !this.hasErrors) {
+            Object.assign(this.bodyValue as Record<string, unknown>, properties);
+        }
     }
 
     /**

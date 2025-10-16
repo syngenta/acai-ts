@@ -29,11 +29,6 @@ export enum LogLevel {
 export type CacheMode = 'all' | 'dynamic' | 'static' | 'none';
 
 /**
- * Routing modes
- */
-export type RoutingMode = 'pattern' | 'directory' | 'list';
-
-/**
  * Operation types for event processing
  */
 export type OperationType = 'create' | 'update' | 'delete' | 'all';

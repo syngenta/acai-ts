@@ -9,19 +9,17 @@ import {MetadataKeys, TimeoutMetadata, setMetadata} from './metadata';
  *
  * @example
  * ```typescript
- * class UserHandler {
- *   @Timeout(5000) // 5 second timeout
- *   @Route('GET', '/users')
- *   async getUsers(request: IRequest, response: IResponse) {
- *     // Handler logic
- *   }
- * }
+ * @Timeout(5000) // 5 second timeout
+ * @Route('GET', '/users')
+ * export const getUsers = async (request: IRequest, response: IResponse) => {
+ *   // Handler logic
+ * };
  * ```
  *
  * @param timeout - Timeout in milliseconds
  */
-export function Timeout(timeout: number): MethodDecorator {
-    return function (target: object, propertyKey: string | symbol): void {
+export function Timeout(timeout: number): <T extends Function>(target: T) => T {
+    return function <T extends Function>(target: T): T {
         if (!Number.isInteger(timeout) || timeout <= 0) {
             throw new Error(`@Timeout decorator requires a positive integer, got: ${timeout}`);
         }
@@ -30,6 +28,7 @@ export function Timeout(timeout: number): MethodDecorator {
             timeout
         };
 
-        setMetadata(MetadataKeys.TIMEOUT, metadata, target, propertyKey);
+        setMetadata(MetadataKeys.TIMEOUT, metadata, target as object);
+        return target;
     };
 }

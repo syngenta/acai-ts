@@ -3,7 +3,7 @@
  */
 
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {CacheMode, RoutingMode} from './common';
+import {CacheMode} from './common';
 import {BeforeMiddleware, AfterMiddleware, AuthMiddleware, ErrorMiddleware, TimeoutMiddleware} from './middleware';
 
 /**
@@ -16,11 +16,6 @@ export type LoggerCallback = (log: {level: string; time: string; log: unknown}) 
  */
 export interface IRouterConfig {
     /**
-     * Routing mode: pattern, directory, or list
-     */
-    mode?: RoutingMode;
-
-    /**
      * Base path to strip from incoming requests (e.g., '/api' or '/acai-example')
      * Useful when deploying with API Gateway custom domains or service prefixes
      */
@@ -32,17 +27,17 @@ export interface IRouterConfig {
     schemaPath?: string;
 
     /**
-     * Path to route handlers directory or glob pattern
-     * - For 'directory' mode: Path to handlers directory (e.g., 'src/handlers')
-     * - For 'pattern' mode: Glob pattern to match handler files (e.g., 'src/handlers' + '**' + '/*.ts')
-     * - Not used for 'list' mode (use 'routes' instead)
+     * Glob pattern to match handler files. If no glob pattern is detected, it will auto-append wildcards.
+     * Supports TypeScript source paths which will be automatically transformed to build output paths
      */
-    routesPath?: string;
+    routesPath: string;
 
     /**
-     * List of route configurations (for list mode)
+     * Build output directory for compiled TypeScript files
+     * If not specified, auto-detects from common build directories
+     * Only used when routesPath contains .ts or .tsx extensions
      */
-    routes?: RouteConfig[];
+    buildOutputDir?: string;
 
     /**
      * Cache mode for route resolution
@@ -104,46 +99,6 @@ export interface IRouterConfig {
      */
     onTimeout?: TimeoutMiddleware;
 }
-
-/**
- * Route configuration for list mode
- */
-export interface RouteConfig {
-    /**
-     * Route path pattern
-     */
-    path: string;
-
-    /**
-     * HTTP method
-     */
-    method: string;
-
-    /**
-     * Handler file path or handler function
-     */
-    handler: string | RouteHandler;
-
-    /**
-     * Validation requirements
-     */
-    requirements?: ValidationRequirements;
-
-    /**
-     * Route-specific timeout
-     */
-    timeout?: number;
-
-    /**
-     * Requires authentication
-     */
-    auth?: boolean;
-}
-
-/**
- * Route handler function
- */
-export type RouteHandler = (request: unknown, response: unknown) => Promise<void> | void;
 
 /**
  * Validation requirements

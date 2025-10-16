@@ -2,7 +2,7 @@
  * Validator for request/response validation using OpenAPI and JSON Schema
  */
 
-import {IValidator, IRequest, IResponse, ValidationRequirements, IRouterConfig, CacheMode, RoutingMode} from '../types';
+import {IValidator, IRequest, IResponse, ValidationRequirements, IRouterConfig, CacheMode} from '../types';
 import {Schema} from './schema';
 import {ApiError} from '../apigateway/error';
 
@@ -78,7 +78,7 @@ export class Validator implements IValidator {
      * @param config - Router configuration to validate
      */
     validateRouterConfigs(config: IRouterConfig): void {
-        const {mode, routesPath, routes, cache} = config;
+        const {routesPath, cache} = config;
 
         // Validate cache configuration
         if (cache !== undefined) {
@@ -88,21 +88,9 @@ export class Validator implements IValidator {
             }
         }
 
-        // Validate routing mode
-        const validRoutingModes: RoutingMode[] = ['pattern', 'directory', 'list'];
-        if (mode && !validRoutingModes.includes(mode)) {
-            throw new ApiError(500, 'router-config', 'mode must be either: directory, pattern, or list');
-        }
-
-        // Validate mode-specific requirements
-        if (mode === 'directory' && !routesPath) {
-            throw new ApiError(500, 'router-config', 'routesPath config is required when mode is directory');
-        }
-        if (mode === 'pattern' && !routesPath) {
-            throw new ApiError(500, 'router-config', 'routesPath config is required when mode is pattern');
-        }
-        if (mode === 'list' && !routes) {
-            throw new ApiError(500, 'router-config', 'routes config is required when mode is list');
+        // Validate routesPath is provided
+        if (!routesPath) {
+            throw new ApiError(500, 'router-config', 'routesPath config is required');
         }
     }
 

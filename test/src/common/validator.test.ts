@@ -165,7 +165,6 @@ describe('Test Validator', () => {
     describe('test router config validation', () => {
         it('should validate valid router config', () => {
             const config = {
-                mode: 'pattern' as const,
                 routesPath: './routes',
                 cache: 'all' as const
             };
@@ -174,51 +173,20 @@ describe('Test Validator', () => {
 
         it('should throw error for invalid cache mode', () => {
             const config = {
+                routesPath: './routes',
                 cache: 'invalid' as any
             };
             expect(() => validator.validateRouterConfigs(config)).toThrow('cache must be either: all, dynamic, static, none');
         });
 
-        it('should throw error for invalid routing mode', () => {
-            const config = {
-                mode: 'invalid' as any
-            };
-            expect(() => validator.validateRouterConfigs(config)).toThrow('mode must be either: directory, pattern, or list');
+        it('should throw error when missing routesPath', () => {
+            const config = {} as any;
+            expect(() => validator.validateRouterConfigs(config)).toThrow('routesPath config is required');
         });
 
-        it('should throw error when directory mode missing routesPath', () => {
+        it('should validate config with valid routesPath', () => {
             const config = {
-                mode: 'directory' as const
-            };
-            expect(() => validator.validateRouterConfigs(config)).toThrow('routesPath config is required when mode is directory');
-        });
-
-        it('should throw error when pattern mode missing routesPath', () => {
-            const config = {
-                mode: 'pattern' as const
-            };
-            expect(() => validator.validateRouterConfigs(config)).toThrow('routesPath config is required when mode is pattern');
-        });
-
-        it('should throw error when list mode missing routes', () => {
-            const config = {
-                mode: 'list' as const
-            };
-            expect(() => validator.validateRouterConfigs(config)).toThrow('routes config is required when mode is list');
-        });
-
-        it('should validate directory mode with routesPath', () => {
-            const config = {
-                mode: 'directory' as const,
                 routesPath: './routes'
-            };
-            expect(() => validator.validateRouterConfigs(config)).not.toThrow();
-        });
-
-        it('should validate list mode with routes', () => {
-            const config = {
-                mode: 'list' as const,
-                routes: []
             };
             expect(() => validator.validateRouterConfigs(config)).not.toThrow();
         });
