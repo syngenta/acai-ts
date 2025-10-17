@@ -576,7 +576,7 @@ const records = event.records;  // Works!
 
 Acai-TS provides powerful method decorators for clean, declarative API Gateway endpoints using the class-based pattern.
 
-> **⚠️ Important**: The `@Before`, `@After`, `@Timeout`, and `@Validate` decorators are for **Router/API Gateway endpoints only** and work on **class methods** (not classes or standalone functions).
+> **⚠️ Important**: The `@Before`, `@After`, `@Auth`, `@Timeout`, and `@Validate` decorators are for **Router/API Gateway endpoints only** and work on **class methods** (not classes or standalone functions).
 >
 > For **event handlers** (DynamoDB, S3, SQS), these decorators will not work. Instead, use:
 > - **Function wrapper patterns** (see Event Processing Patterns section)
@@ -621,7 +621,7 @@ Best for complex endpoints with multiple methods and middleware:
 
 ```typescript
 // File: src/handlers/users.ts
-import { BaseEndpoint, Before, After, Timeout, Validate } from 'acai-ts';
+import { BaseEndpoint, Before, After, Timeout, Validate, Auth } from 'acai-ts';
 
 export class UsersEndpoint extends BaseEndpoint {
   @Before(authMiddleware)
@@ -713,6 +713,49 @@ export class HeavyTaskEndpoint extends BaseEndpoint {
 }
 ```
 
+#### `@Auth(required?)`
+
+Mark a method as requiring authentication. When used, the router's `withAuth` middleware will be executed:
+
+```typescript
+// Configure auth middleware in router
+const router = new Router({
+  basePath: '/api/v1',
+  routesPath: './src/handlers/**/*.ts',
+  withAuth: async (request, response) => {
+    // Your JWT validation logic here
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    if (!token || !validateJWT(token)) {
+      response.code = 401;
+      response.setError('auth', 'Invalid or missing authentication token');
+    }
+  }
+});
+
+// Use @Auth decorator on methods that require authentication
+export class UsersEndpoint extends BaseEndpoint {
+  @Auth()  // Requires authentication (default: required=true)
+  async get(request: Request, response: Response): Promise<Response> {
+    // Auth middleware runs before this method
+    response.body = { users: [] };
+    return response;
+  }
+
+  @Auth(false)  // Explicitly disable auth requirement
+  async post(request: Request, response: Response): Promise<Response> {
+    // No auth required for this endpoint
+    response.body = { message: 'Public endpoint' };
+    return response;
+  }
+
+  // No @Auth decorator = no auth requirement
+  async options(request: Request, response: Response): Promise<Response> {
+    response.body = { message: 'CORS preflight' };
+    return response;
+  }
+}
+```
+
 #### `@Validate(validationConfig)`
 
 Validate request data against schemas or requirements:
@@ -765,7 +808,8 @@ Stack multiple decorators on a single method. They execute in a specific order:
 
 ```typescript
 export class UsersEndpoint extends BaseEndpoint {
-  @Before(authMiddleware, rateLimiter)  // Runs first
+  @Before(rateLimiter)  // Runs first (custom middleware)
+  @Auth()  // Auth middleware runs after Before middleware
   @Validate({ requiredBody: 'CreateUserRequest' })  // Validates request
   @Timeout(5000)  // Sets timeout
   @After(addTimestamp, logResponse)  // Runs last
@@ -778,10 +822,11 @@ export class UsersEndpoint extends BaseEndpoint {
 ```
 
 **Execution Order:**
-1. `@Before` middleware (in order: rateLimiter → authMiddleware)
-2. `@Validate` validation
-3. Method execution with `@Timeout`
-4. `@After` middleware (in order: addTimestamp → logResponse)
+1. `@Before` middleware (rateLimiter)
+2. `@Auth` authentication (router's `withAuth` middleware)
+3. `@Validate` validation
+4. Method execution with `@Timeout`
+5. `@After` middleware (in order: addTimestamp → logResponse)
 
 ### Multiple HTTP Methods in One Class
 
@@ -1040,7 +1085,7 @@ interface Response {
 **Class for defining API Gateway endpoints with method decorators:**
 
 ```typescript
-import { BaseEndpoint, Before, After, Timeout, Validate } from 'acai-ts';
+import { BaseEndpoint, Before, After, Timeout, Validate, Auth } from 'acai-ts';
 
 export class UsersEndpoint extends BaseEndpoint {
   // Implement HTTP methods: get, post, put, patch, delete
