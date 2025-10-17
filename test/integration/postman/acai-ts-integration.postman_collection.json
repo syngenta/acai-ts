@@ -1,0 +1,386 @@
+{
+  "info": {
+    "_postman_id": "b3a8abac-7d13-4f79-a7d7-3c91d005a7c4",
+    "name": "acai-ts Integration Suite",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Functional Hello World",
+      "item": [
+        {
+          "name": "GET functional hello-world",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/functional/hello-world"
+          }
+        },
+        {
+          "name": "POST functional hello-world",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Integration\",\n  \"greeting\": \"Hello\"\n}"
+            },
+            "url": "{{base_url}}/functional/hello-world"
+          }
+        },
+        {
+          "name": "PATCH functional hello-world",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payload\": {\n    \"example\": \"patched\"\n  }\n}"
+            },
+            "url": "{{base_url}}/functional/hello-world"
+          }
+        },
+        {
+          "name": "PUT functional hello-world",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payload\": {\n    \"example\": \"put\"\n  }\n}"
+            },
+            "url": "{{base_url}}/functional/hello-world"
+          }
+        },
+        {
+          "name": "DELETE functional hello-world",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-trace-id",
+                "value": "integration-trace"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world?purpose=test&mode=debug"
+          }
+        },
+        {
+          "name": "POST functional hello-world (missing body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PATCH functional hello-world (missing body)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PUT functional hello-world (missing body)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "DELETE functional hello-world (missing trace header)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world?purpose=test&mode=debug"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Decorator Hello World",
+      "item": [
+        {
+          "name": "GET decorator hello-world",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/decorator/hello-world"
+          }
+        },
+        {
+          "name": "POST decorator hello-world",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Integration\",\n  \"greeting\": \"Hola\"\n}"
+            },
+            "url": "{{base_url}}/decorator/hello-world"
+          }
+        },
+        {
+          "name": "PATCH decorator hello-world",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payload\": {\n    \"example\": \"patched\"\n  }\n}"
+            },
+            "url": "{{base_url}}/decorator/hello-world"
+          }
+        },
+        {
+          "name": "PUT decorator hello-world",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payload\": {\n    \"example\": \"put\"\n  }\n}"
+            },
+            "url": "{{base_url}}/decorator/hello-world"
+          }
+        },
+        {
+          "name": "DELETE decorator hello-world",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-trace-id",
+                "value": "integration-trace"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world?purpose=test&mode=debug"
+          }
+        },
+        {
+          "name": "POST decorator hello-world (missing body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PATCH decorator hello-world (missing body)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PUT decorator hello-world (missing body)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "DELETE decorator hello-world (missing trace header)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world?purpose=test&mode=debug"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Middleware Routes",
+      "item": [
+        {
+          "name": "GET middleware before-all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/middleware/before-all"
+          }
+        },
+        {
+          "name": "GET middleware after-all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/middleware/after-all"
+          }
+        },
+        {
+          "name": "GET middleware on-error",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/middleware/on-error"
+          }
+        },
+        {
+          "name": "GET middleware on-timeout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/middleware/on-timeout"
+          }
+        },
+        {
+          "name": "GET middleware with-auth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/middleware/with-auth"
+          }
+        },
+        {
+          "name": "GET middleware with-auth (missing api key)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/middleware/with-auth"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nested Routes",
+      "item": [
+        {
+          "name": "GET nested index",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/nested"
+          }
+        },
+        {
+          "name": "GET nested dynamic",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/nested/{{nested_id}}"
+          }
+        },
+        {
+          "name": "GET nested proxy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/nested/files/{{proxy_path}}"
+          }
+        }
+      ]
+    }
+  ]
+}

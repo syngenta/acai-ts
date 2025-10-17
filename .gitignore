@@ -146,3 +146,9 @@ test-results/
 
 # AI Planning documents (local only)
 ai-plan/
+
+# build
+.build/
+
+# Mac
+.DS_Store

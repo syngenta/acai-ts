@@ -73,7 +73,7 @@ npm install acai-ts reflect-metadata
 
 ### Requirements
 
-- **Node.js**: >= 18.18.2
+- **Node.js**: >= 22.19.0
 - **TypeScript**: >= 5.0
 
 > **Note**: `reflect-metadata` is required for decorator support.

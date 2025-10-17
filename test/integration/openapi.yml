@@ -1,0 +1,563 @@
+openapi: 3.1.3
+info:
+    title: acai-ts integration scaffold
+    version: 0.2.0
+paths:
+    /acai-ts-int-test/functional/hello-world:
+        get:
+            summary: Functional hello world (GET)
+            operationId: functionalHelloWorldGet
+            responses:
+                '200':
+                    description: Successful functional GET response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-functional-hello-world-get-response'
+        post:
+            summary: Functional hello world (POST)
+            operationId: functionalHelloWorldPost
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1-functional-hello-world-post-request'
+            responses:
+                '200':
+                    description: Successful functional POST response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-functional-hello-world-post-response'
+        patch:
+            summary: Functional hello world (PATCH)
+            operationId: functionalHelloWorldPatch
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1-functional-hello-world-patch-request'
+            responses:
+                '200':
+                    description: Functional PATCH response with context echo
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-functional-hello-world-patch-response'
+        put:
+            summary: Functional hello world (PUT)
+            operationId: functionalHelloWorldPut
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1-functional-hello-world-put-request'
+            responses:
+                '200':
+                    description: Functional PUT response with after hook artefacts
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-functional-hello-world-put-response'
+        delete:
+            summary: Functional hello world (DELETE)
+            operationId: functionalHelloWorldDelete
+            parameters:
+                - 
+                    in: header
+                    name: x-trace-id
+                    required: true
+                    schema:
+                        type: string
+                    description: Correlation identifier required for DELETE requests.
+                - 
+                    in: query
+                    name: purpose
+                    required: true
+                    schema:
+                        type: string
+                - 
+                    in: query
+                    name: mode
+                    required: false
+                    schema:
+                        type: string
+                - 
+                    in: query
+                    name: optional
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                '200':
+                    description: Functional DELETE echo response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-functional-hello-world-delete-response'
+            security:
+                - apiKeyAuth: []
+    /acai-ts-int-test/decorator/hello-world:
+        get:
+            summary: Decorator hello world (GET)
+            operationId: decoratorHelloWorldGet
+            responses:
+                '200':
+                    description: Successful decorator GET response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-decorator-hello-world-get-response'
+        post:
+            summary: Decorator hello world (POST)
+            operationId: decoratorHelloWorldPost
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1-decorator-hello-world-post-request'
+            responses:
+                '200':
+                    description: Successful decorator POST response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-decorator-hello-world-post-response'
+        patch:
+            summary: Decorator hello world (PATCH)
+            operationId: decoratorHelloWorldPatch
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1-decorator-hello-world-patch-request'
+            responses:
+                '200':
+                    description: Decorator PATCH response with context echo
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-decorator-hello-world-patch-response'
+        put:
+            summary: Decorator hello world (PUT)
+            operationId: decoratorHelloWorldPut
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1-decorator-hello-world-put-request'
+            responses:
+                '200':
+                    description: Decorator PUT response with after hook artefacts
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-decorator-hello-world-put-response'
+        delete:
+            summary: Decorator hello world (DELETE)
+            operationId: decoratorHelloWorldDelete
+            parameters:
+                - 
+                    in: header
+                    name: x-trace-id
+                    required: true
+                    schema:
+                        type: string
+                    description: Correlation identifier required for DELETE requests.
+                - 
+                    in: query
+                    name: purpose
+                    required: true
+                    schema:
+                        type: string
+                - 
+                    in: query
+                    name: mode
+                    required: false
+                    schema:
+                        type: string
+                - 
+                    in: query
+                    name: optional
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                '200':
+                    description: Decorator DELETE echo response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-decorator-hello-world-delete-response'
+            security:
+                - apiKeyAuth: []
+    /acai-ts-int-test/middleware/before-all:
+        get:
+            summary: Middleware beforeAll observer
+            operationId: middlewareBeforeAllGet
+            responses:
+                '200':
+                    description: Response showing context injected by beforeAll middleware.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-middleware-before-all-response'
+    /acai-ts-int-test/middleware/after-all:
+        get:
+            summary: Middleware afterAll observer
+            operationId: middlewareAfterAllGet
+            responses:
+                '200':
+                    description: Response showcasing mutations applied by afterAll middleware.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-middleware-after-all-response'
+    /acai-ts-int-test/middleware/on-error:
+        get:
+            summary: Middleware onError trigger
+            operationId: middlewareOnErrorGet
+            responses:
+                '200':
+                    description: Successful onError middleware execution.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-middleware-on-error-response'
+    /acai-ts-int-test/middleware/on-timeout:
+        get:
+            summary: Middleware onTimeout trigger
+            operationId: middlewareOnTimeoutGet
+            responses:
+                '200':
+                    description: Successful onTimeout middleware execution.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-middleware-on-timeout-response'
+    /acai-ts-int-test/middleware/with-auth:
+        get:
+            summary: Middleware API key enforcement route
+            operationId: middlewareWithAuthGet
+            responses:
+                '200':
+                    description: Successful request including headers echoed back.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-middleware-with-auth-response'
+            security:
+                - apiKeyAuth: []
+    /acai-ts-int-test/nested:
+        get:
+            summary: Nested index exploration route
+            operationId: nestedIndexGet
+            responses:
+                '200':
+                    description: Basic nested route response with path echo.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-nested-index-response'
+    /acai-ts-int-test/nested/{id}:
+        get:
+            summary: Nested dynamic route
+            operationId: nestedDynamicGet
+            parameters:
+                - 
+                    in: path
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                '200':
+                    description: Dynamic response including captured path parameter.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-nested-dynamic-response'
+    /acai-ts-int-test/nested/files/{proxy+}:
+        get:
+            summary: Nested wildcard route
+            operationId: nestedProxyGet
+            parameters:
+                - 
+                    in: path
+                    name: proxy
+                    required: true
+                    schema:
+                        type: string
+                    description: Greedy path segment captured by the router (router file uses {proxy+}).
+            responses:
+                '200':
+                    description: Wildcard response echoing the captured proxy path.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1-nested-proxy-response'
+components:
+    securitySchemes:
+        apiKeyAuth:
+            type: apiKey
+            in: header
+            name: x-api-key
+    schemas:
+        v1-functional-hello-world-get-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                route:
+                    type: string
+            required:
+                - message
+                - route
+        v1-functional-hello-world-post-request:
+            type: object
+            additionalProperties: true
+            description: Arbitrary JSON payload accepted by the functional POST handler.
+        v1-functional-hello-world-post-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                received:
+                    type: object
+                    additionalProperties: true
+            required:
+                - message
+                - received
+        v1-functional-hello-world-patch-request:
+            type: object
+            additionalProperties: true
+            description: Patch payload mirrored into the response and context.
+        v1-functional-hello-world-patch-response:
+            type: object
+            properties:
+                beforeEcho:
+                    type: object
+                    additionalProperties: true
+                patched:
+                    type: boolean
+                contextEcho:
+                    oneOf:
+                        - 
+                            type: object
+                            additionalProperties: true
+                        - type: 'null'
+            required:
+                - beforeEcho
+                - patched
+                - contextEcho
+        v1-functional-hello-world-put-request:
+            type: object
+            additionalProperties: true
+            description: Put payload echoed back in the response.
+        v1-functional-hello-world-put-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                payload:
+                    type: object
+                    additionalProperties: true
+                afterHook:
+                    type: string
+            required:
+                - message
+                - payload
+                - afterHook
+        v1-functional-hello-world-delete-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                headers:
+                    type: object
+                    additionalProperties:
+                        type: string
+                query:
+                    type: object
+                    additionalProperties:
+                        type: string
+            required:
+                - message
+                - headers
+                - query
+        v1-decorator-hello-world-get-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                route:
+                    type: string
+            required:
+                - message
+                - route
+        v1-decorator-hello-world-post-request:
+            type: object
+            additionalProperties: true
+            description: Arbitrary JSON payload accepted by the decorator POST handler.
+        v1-decorator-hello-world-post-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                received:
+                    type: object
+                    additionalProperties: true
+            required:
+                - message
+                - received
+        v1-decorator-hello-world-patch-request:
+            type: object
+            additionalProperties: true
+            description: Patch payload mirrored into the decorator context.
+        v1-decorator-hello-world-patch-response:
+            type: object
+            properties:
+                beforeEcho:
+                    type: object
+                    additionalProperties: true
+                patched:
+                    type: boolean
+                contextEcho:
+                    oneOf:
+                        -  
+                            type: object
+                            additionalProperties: true
+                        - type: 'null'
+            required:
+                - beforeEcho
+                - patched
+                - contextEcho
+        v1-decorator-hello-world-put-request:
+            type: object
+            additionalProperties: true
+            description: Put payload echoed back in the decorator response.
+        v1-decorator-hello-world-put-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                payload:
+                    type: object
+                    additionalProperties: true
+                afterHook:
+                    type: string
+            required:
+                - message
+                - payload
+                - afterHook
+        v1-decorator-hello-world-delete-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                headers:
+                    type: object
+                    additionalProperties:
+                        type: string
+                query:
+                    type: object
+                    additionalProperties:
+                        type: string
+            required:
+                - message
+                - headers
+                - query
+        v1-middleware-before-all-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                context:
+                    type: object
+                    additionalProperties: true
+                header:
+                    oneOf:
+                        - type: string
+                        - type: 'null'
+            required:
+                - message
+                - context
+                - header
+        v1-middleware-after-all-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                afterAll:
+                    type: string
+            required:
+                - message
+                - afterAll
+        v1-middleware-on-error-response:
+            type: object
+            properties:
+                message:
+                    type: string
+            required:
+                - message
+        v1-middleware-on-timeout-response:
+            type: object
+            properties:
+                message:
+                    type: string
+            required:
+                - message
+        v1-middleware-with-auth-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                headers:
+                    type: object
+                    additionalProperties:
+                        type: string
+            required:
+                - message
+                - headers
+        v1-nested-index-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                path:
+                    type: string
+            required:
+                - message
+                - path
+        v1-nested-dynamic-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                id:
+                    type: string
+                route:
+                    type: string
+            required:
+                - message
+                - id
+                - route
+        v1-nested-proxy-response:
+            type: object
+            properties:
+                message:
+                    type: string
+                proxy:
+                    type: string
+                route:
+                    type: string
+            required:
+                - message
+                - proxy
+                - route

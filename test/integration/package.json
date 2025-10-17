@@ -1,0 +1,28 @@
+{
+    "name": "acai-ts-integration-tests",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Integration harness for exercising acai-ts via Serverless Offline.",
+    "engines": {
+        "node": ">=22.19.0"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "build:watch": "tsc -p tsconfig.json --watch",
+        "type-check": "tsc -p tsconfig.json --noEmit",
+        "start": "serverless offline"
+    },
+    "dependencies": {
+        "acai-ts": "file:../../acai-ts-1.0.0.tgz",
+        "serverless": "^3.39.0",
+        "serverless-offline": "^13.4.0",
+        "serverless-plugin-typescript": "^2.1.5",
+        "ts-node": "^10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.7.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.2"
+    }
+}

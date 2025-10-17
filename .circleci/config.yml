@@ -1,7 +1,70 @@
 version: 2.1
 orbs:
-    sonarcloud: sonarsource/sonarcloud@2.0.0
+    sonarcloud: sonarsource/sonarcloud@3.0.1
 commands:
+    install-newman:
+        description: "Install Newman and HTML reporter"
+        steps:
+            - run:
+                  name: Install Newman
+                  command: npm install --no-save newman newman-reporter-html
+    create-artifacts-dir:
+        description: "Create coverage directory"
+        steps:
+            - run:
+                  name: Create coverage directory
+                  command: mkdir -p ./coverage
+            - run:
+                  name: Create lint directory
+                  command: mkdir -p ./lint
+    node-package:
+        description: "Create npm package tarball"
+        steps:
+            - run:
+                  name: Create acai package tarball
+                  command: |
+                      rm -f acai-*.tgz
+                      npm pack
+    postman-integration-run:
+        description: "Run integration Postman suite against Serverless Offline"
+        parameters:
+            auto_validate:
+                type: string
+        steps:
+            - run:
+                  name: Install integration dependencies
+                  command: npm install --include=dev
+                  working_directory: test/integration
+            - run:
+                  name: Install local tarball
+                  command: npm install ../../acai-*.tgz
+                  working_directory: test/integration
+            - run:
+                  name: Run build for integration tests
+                  command: npm run build
+                  working_directory: test/integration
+            - run:
+                  name: Start Serverless Offline
+                  command: |
+                      AUTO_VALIDATE=<<parameters.auto_validate>> npx serverless offline --config serverless.yml
+                  working_directory: test/integration
+                  background: true
+            - run:
+                  name: Wait for Serverless Offline
+                  command: |
+                      for i in {1..20}; do
+                          curl -s --fail http://localhost:3000/acai-ts-int-test/functional/hello-world >/dev/null && exit 0
+                          sleep 3
+                      done
+                      echo "Serverless failed to start" >&2
+                      exit 1
+            - run:
+                  name: Run Postman collection
+                  command: npx newman run test/integration/postman/acai-ts-integration.postman_collection.json -e test/integration/postman/acai-ts-integration.postman_environment.json --reporters cli,html,junit --reporter-html-export coverage/index.html --reporter-junit-export coverage/junit.xml --env-var base_url=http://127.0.0.1:3000/acai-ts-int-test --env-var api_key=integration-key --env-var nested_id=demo-id --env-var AUTO_VALIDATE=<<parameters.auto_validate>>
+            - store_test_results:
+                path: ./coverage
+            - store_artifacts:
+                path: ./coverage
     node-install:
         description: "Install Node.js dependencies"
         steps:
@@ -19,9 +82,7 @@ commands:
         steps:
             - run:
                 name: Run linter
-                command: |
-                    mkdir -p ./lint
-                    npm run lint -- --format html --output-file ./lint/index.html || true
+                command: npm run lint -- --format html --output-file ./lint/index.html || true
             - store_artifacts:
                 path: ./lint
     node-build:
@@ -43,9 +104,7 @@ commands:
         steps:
             - run:
                 name: Run tests with coverage
-                command: |
-                    mkdir -p ./coverage
-                    npm run test:ci
+                command: npm run test:ci
                 environment:
                     CI: true
                     NODE_OPTIONS: "--max-old-space-size=4096"
@@ -76,7 +135,6 @@ commands:
                     echo "Publishing to latest"
                     npm publish --access public
                   fi
-
 jobs:
     install-build:
         docker:
@@ -103,6 +161,7 @@ jobs:
         steps:
             - attach_workspace:
                 at: ~/project
+            - create-artifacts-dir
             - node-linter
     test:
         docker:
@@ -110,6 +169,7 @@ jobs:
         steps:
             - attach_workspace:
                 at: ~/project
+            - create-artifacts-dir
             - node-test
     coverage:
         docker:
@@ -117,8 +177,31 @@ jobs:
         steps:
             - attach_workspace:
                 at: ~/project
+            - create-artifacts-dir
             - node-coverage-report
             - sonarcloud/scan
+    postman-auto-validate-false:
+        docker:
+            - image: cimg/node:22.19.0
+        steps:
+            - attach_workspace:
+                  at: ~/project
+            - create-artifacts-dir
+            - install-newman
+            - node-package
+            - postman-integration-run:
+                auto_validate: "false"
+    postman-auto-validate-true:
+        docker:
+            - image: cimg/node:22.19.0
+        steps:
+            - attach_workspace:
+                  at: ~/project
+            - create-artifacts-dir
+            - install-newman
+            - node-package
+            - postman-integration-run:
+                auto_validate: "true"
     install-build-deploy:
         docker:
             - image: cimg/node:22.19.0
@@ -129,8 +212,6 @@ jobs:
             - node-build
             - npm-deploy
 workflows:
-    version: 2
-    # Deploy workflow: Runs on git tags, deploys to NPM
     install-build-deploy-workflow:
         jobs:
             - install-build-deploy:
@@ -139,7 +220,6 @@ workflows:
                         only: /.*/
                     branches:
                         ignore: /.*/
-    # Test workflow: Runs on all branches, performs full testing
     install-build-test-workflow:
         jobs:
             - install-build
@@ -155,5 +235,11 @@ workflows:
             - coverage:
                 context:
                     - sonarcloud
+                requires:
+                  - install-build
+            - postman-auto-validate-false:
+                requires:
+                  - install-build
+            - postman-auto-validate-true:
                 requires:
                   - install-build
