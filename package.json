@@ -41,7 +41,7 @@
         "dist"
     ],
     "engines": {
-        "node": ">=18.18.2"
+        "node": ">=22.19.0"
     },
     "keywords": [
         "acai",

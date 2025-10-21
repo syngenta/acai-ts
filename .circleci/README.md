@@ -67,7 +67,7 @@ git push origin main --tags
 
 ## Docker Image
 
-Uses `cimg/node:18.18.2` - CircleCI's official Node.js 18 image with common tools pre-installed.
+Uses `cimg/node:22.19.0` - CircleCI's official Node.js 22 image with common tools pre-installed.
 
 ## Resource Class
 

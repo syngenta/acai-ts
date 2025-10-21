@@ -138,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   // New (acai-ts)
   import { Router } from 'acai-ts';
   ```
-- **TypeScript Required**: Project now requires TypeScript 5.0+ and Node.js 18.18.2+
+- **TypeScript Required**: Project now requires TypeScript 5.0+ and Node.js 22.19.0+
 
 #### Enhanced
 - **Validation**: Upgraded from JSON Schema draft-07 to 2020-12

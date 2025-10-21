@@ -26,7 +26,7 @@ npm uninstall acai-js
 npm install acai-ts
 ```
 
-**Important:** Ensure your project uses TypeScript 5.0+ and Node.js 18.18.2+.
+**Important:** Ensure your project uses TypeScript 5.0+ and Node.js 22.19.0+.
 
 ## Breaking Changes
 
