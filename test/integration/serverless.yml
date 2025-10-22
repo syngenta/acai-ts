@@ -28,7 +28,6 @@ custom:
         stage: local
         prefix: ${self:service}
         region: us-east-2
-        lambdaPort: 3002
         noAuth: true
         noPrependStageInUrl: true
 functions:
