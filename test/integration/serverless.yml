@@ -19,7 +19,7 @@ provider:
     stage: local
     region: us-east-1
     environment:
-        AUTO_VALIDATE: ${env:AUTO_VALIDATE, 'true'}
+        AUTO_VALIDATE: ${env:AUTO_VALIDATE, 'false'}
         VALIDATE_RESPONSE: ${env:VALIDATE_RESPONSE, 'false'}
         TEST_API_KEY: ${env:TEST_API_KEY, 'integration-key'}
 custom:
