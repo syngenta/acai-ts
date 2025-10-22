@@ -83,6 +83,70 @@
             ],
             "url": "{{base_url}}/functional/hello-world?purpose=test&mode=debug"
           }
+        },
+        {
+          "name": "POST functional hello-world (missing body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PATCH functional hello-world (missing body)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PUT functional hello-world (missing body)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "DELETE functional hello-world (missing trace header)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/functional/hello-world?purpose=test&mode=debug"
+          }
         }
       ]
     },
@@ -164,6 +228,70 @@
             ],
             "url": "{{base_url}}/decorator/hello-world?purpose=test&mode=debug"
           }
+        },
+        {
+          "name": "POST decorator hello-world (missing body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PATCH decorator hello-world (missing body)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "PUT decorator hello-world (missing body)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "DELETE decorator hello-world (missing trace header)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": "{{base_url}}/decorator/hello-world?purpose=test&mode=debug"
+          }
         }
       ]
     },
@@ -212,6 +340,14 @@
                 "value": "{{api_key}}"
               }
             ],
+            "url": "{{base_url}}/middleware/with-auth"
+          }
+        },
+        {
+          "name": "GET middleware with-auth (missing api key)",
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": "{{base_url}}/middleware/with-auth"
           }
         }
