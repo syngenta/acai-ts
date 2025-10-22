@@ -68,7 +68,7 @@ export class CreateUserEndpoint extends BaseEndpoint {
 ## 📦 Installation
 
 ```bash
-npm install acai-ts reflect-metadata
+npm install acai-ts
 ```
 
 ### Requirements
@@ -76,7 +76,7 @@ npm install acai-ts reflect-metadata
 - **Node.js**: >= 22.19.0
 - **TypeScript**: >= 5.0
 
-> **Note**: `reflect-metadata` is required for decorator support.
+> **Note**: `reflect-metadata` is required for decorator support. Should be part of dependencies installed.
 
 ---
 
