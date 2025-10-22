@@ -17,6 +17,14 @@ commands:
             - run:
                   name: Create lint directory
                   command: mkdir -p ./lint
+    node-package:
+        description: "Create npm package tarball"
+        steps:
+            - run:
+                  name: Create acai package tarball
+                  command: |
+                      rm -f acai-*.tgz
+                      npm pack
     postman-integration-run:
         description: "Run integration Postman suite against Serverless Offline"
         parameters:
@@ -28,20 +36,12 @@ commands:
                   command: npm install --include=dev
                   working_directory: test/integration
             - run:
-                  name: Remove existing tarballs
-                  command: rm -f acai-ts-*.tgz
+                  name: Install local tarball
+                  command: npm install ../../acai-*.tgz
                   working_directory: test/integration
             - run:
                   name: Run build for integration tests
                   command: npm run build
-                  working_directory: test/integration
-            - run:
-                  name: Package acai-ts tarball
-                  command: npm pack
-                  working_directory: test/integration
-            - run:
-                  name: Install local tarball
-                  command: npm install ../../acai-*.tgz
                   working_directory: test/integration
             - run:
                   name: Start Serverless Offline
@@ -188,6 +188,7 @@ jobs:
                   at: ~/project
             - create-artifacts-dir
             - install-newman
+            - node-package
             - postman-integration-run:
                 auto_validate: "false"
     postman-auto-validate-true:
@@ -198,6 +199,7 @@ jobs:
                   at: ~/project
             - create-artifacts-dir
             - install-newman
+            - node-package
             - postman-integration-run:
                 auto_validate: "true"
     install-build-deploy:
