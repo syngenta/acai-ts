@@ -7,9 +7,9 @@
         "node": ">=22.19.0"
     },
     "scripts": {
-        "build": "tsc -p tsconfig.integration.json",
-        "build:watch": "tsc -p tsconfig.integration.json --watch",
-        "type-check": "tsc -p tsconfig.integration.json --noEmit",
+        "build": "tsc -p tsconfig.json",
+        "build:watch": "tsc -p tsconfig.json --watch",
+        "type-check": "tsc -p tsconfig.json --noEmit",
         "start": "serverless offline"
     },
     "dependencies": {
