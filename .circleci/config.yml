@@ -53,7 +53,7 @@ commands:
                   name: Wait for Serverless Offline
                   command: |
                       for i in {1..20}; do
-                          curl -s --fail http://localhost:3000/int-test/v1/hello-world >/dev/null && exit 0
+                          curl -s --fail http://localhost:3000/acai-ts-int-test/functional/hello-world >/dev/null && exit 0
                           sleep 3
                       done
                       echo "Serverless failed to start" >&2
