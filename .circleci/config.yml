@@ -3,7 +3,7 @@ orbs:
     sonarcloud: sonarsource/sonarcloud@3.0.1
 commands:
     install-newman:
-        description: "Install Newman and HTML reporter"
+        description: Install Newman and HTML reporter
         steps:
             - run:
                   name: Install Newman
@@ -31,6 +31,10 @@ commands:
             auto_validate:
                 type: string
         steps:
+            - run:
+                  name: Clean npm cache
+                  command: rm -rf node_modules ~/.npm
+                  working_directory: test/integration
             - run:
                   name: Install integration dependencies
                   command: npm install --include=dev
@@ -66,13 +70,13 @@ commands:
             - store_artifacts:
                 path: ./coverage
     node-install:
-        description: "Install Node.js dependencies"
+        description: Install Node dependencies
         steps:
             - run:
                 name: Install dependencies
                 command: npm ci
     node-type-check:
-        description: "Run TypeScript type checking"
+        description: Run TypeScript type checking
         steps:
             - run:
                 name: TypeScript type check
@@ -86,13 +90,13 @@ commands:
             - store_artifacts:
                 path: ./lint
     node-build:
-        description: "Build TypeScript project (ESM + CJS)"
+        description: Build TypeScript project (ESM + CJS)
         steps:
             - run:
                 name: Build project
                 command: npm run build
     node-test:
-        description: "Run Jest tests"
+        description: Run Jest tests
         steps:
             - run:
                 name: Run tests 
@@ -100,7 +104,7 @@ commands:
                 environment:
                     NODE_OPTIONS: "--max-old-space-size=4096"
     node-coverage-report:
-        description: "Run Jest tests with coverage"
+        description: Run Jest tests with coverage
         steps:
             - run:
                 name: Run tests with coverage
@@ -113,7 +117,7 @@ commands:
             - store_artifacts:
                 path: ./coverage
     npm-deploy:
-        description: "Deploy package to NPM registry"
+        description: Deploy package to NPM registry
         steps:
             - attach_workspace:
                 at: .
