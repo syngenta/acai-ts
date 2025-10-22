@@ -1250,14 +1250,14 @@ Recommended project structure for routing:
 ```
 my-lambda/
 ├── src/
-│   ├── handlers/
+│   ├── controllers/
 │   │   ├── users/
 │   │   │   ├── index.controller.ts       # GET/POST /users
 │   │   │   └── {id}.controller.ts        # GET/PUT/DELETE /users/{id}
-│   │   └── products.controller.ts         # /products
+│   │   └── products.controller.ts        # /products
 │   ├── schemas/
 │   │   └── openapi.yml
-│   └── index.ts                           # Lambda entry point
+│   └── index.ts                          # Lambda entry point
 ├── test/
 ├── tsconfig.json
 └── package.json
