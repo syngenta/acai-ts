@@ -184,6 +184,8 @@ jobs:
         docker:
             - image: cimg/node:22.19.0
         steps:
+            - attach_workspace:
+                  at: ~/project
             - create-artifacts-dir
             - install-newman
             - postman-integration-run:
@@ -192,6 +194,8 @@ jobs:
         docker:
             - image: cimg/node:22.19.0
         steps:
+            - attach_workspace:
+                  at: ~/project
             - create-artifacts-dir
             - install-newman
             - postman-integration-run:
