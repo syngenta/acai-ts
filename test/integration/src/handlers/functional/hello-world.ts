@@ -1,31 +1,27 @@
-import {Request, Response, ValidationRequirements} from 'acai-ts';
+import {AfterMiddleware, BeforeMiddleware, Request, Response} from 'acai-ts';
 import {
   defineRequirements,
   ensureRecord,
   mergeJsonBody,
   schemaPair,
+  schemaRef,
   setJsonBody,
-  withAuthRequirement
+  withAuthRequirement,
+  MethodRequirements
 } from '../../utils';
 
-type HelloRequest = Request<Record<string, unknown>>;
-type HelloResponse = Response<Record<string, unknown>>;
+type HelloRequest = Request;
+type HelloResponse = Response;
 
-interface HelloValidationRequirements extends ValidationRequirements {
-  requiredAuth?: boolean;
-  before?: (request: HelloRequest, response: HelloResponse) => Promise<void> | void;
-  after?: (request: HelloRequest, response: HelloResponse) => Promise<void> | void;
-}
-
-const patchBefore = (request: HelloRequest, response: HelloResponse): void => {
+const patchBefore: BeforeMiddleware = (request, response): void => {
   const mirroredBody = ensureRecord(request.body);
   const existingContext = (request.context as Record<string, unknown> | undefined) || {};
   request.context = {...existingContext, functionalBeforeEcho: mirroredBody};
-  setJsonBody(response, {beforeEcho: mirroredBody});
+  setJsonBody(response as Response<Record<string, unknown>>, {beforeEcho: mirroredBody});
 };
 
-const putAfter = (_request: HelloRequest, response: HelloResponse): void => {
-  mergeJsonBody(response, {afterHook: 'functional after hook executed'});
+const putAfter: AfterMiddleware = (_request, response): void => {
+  mergeJsonBody(response as Response<Record<string, unknown>>, {afterHook: 'functional after hook executed'});
 };
 
 const version = 'v1';
@@ -37,19 +33,19 @@ const schema = {
   put: schemaPair(version, resource, 'put')
 };
 
-export const requirements = defineRequirements<Record<string, HelloValidationRequirements>>({
+export const requirements = defineRequirements<Record<string, MethodRequirements>>({
   post: {
     requiredBody: schema.post.request,
-    requiredResponse: schema.post.response
+    response: schemaRef(schema.post.response)
   },
   patch: {
     requiredBody: schema.patch.request,
-    requiredResponse: schema.patch.response,
+    response: schemaRef(schema.patch.response),
     before: patchBefore
   },
   put: {
     requiredBody: schema.put.request,
-    requiredResponse: schema.put.response,
+    response: schemaRef(schema.put.response),
     after: putAfter
   },
   delete: withAuthRequirement({
@@ -60,7 +56,7 @@ export const requirements = defineRequirements<Record<string, HelloValidationReq
 });
 
 export const get = async (request: HelloRequest, response: HelloResponse): Promise<HelloResponse> => {
-  setJsonBody(response, {
+  setJsonBody(response as Response<Record<string, unknown>>, {
     message: 'functional hello world',
     route: request.path
   });
@@ -68,7 +64,7 @@ export const get = async (request: HelloRequest, response: HelloResponse): Promi
 };
 
 export const post = async (request: HelloRequest, response: HelloResponse): Promise<HelloResponse> => {
-  setJsonBody(response, {
+  setJsonBody(response as Response<Record<string, unknown>>, {
     message: 'functional hello world post',
     received: ensureRecord(request.body)
   });
@@ -78,7 +74,7 @@ export const post = async (request: HelloRequest, response: HelloResponse): Prom
 export const patch = async (request: HelloRequest, response: HelloResponse): Promise<HelloResponse> => {
   const current = ensureRecord(response.rawBody);
   const contextEcho = (request.context as Record<string, unknown> | undefined)?.functionalBeforeEcho ?? null;
-  mergeJsonBody(response, {
+  mergeJsonBody(response as Response<Record<string, unknown>>, {
     ...current,
     patched: true,
     contextEcho
@@ -87,7 +83,7 @@ export const patch = async (request: HelloRequest, response: HelloResponse): Pro
 };
 
 export const put = async (request: HelloRequest, response: HelloResponse): Promise<HelloResponse> => {
-  setJsonBody(response, {
+  setJsonBody(response as Response<Record<string, unknown>>, {
     message: 'functional hello world put',
     payload: ensureRecord(request.body)
   });
@@ -95,7 +91,7 @@ export const put = async (request: HelloRequest, response: HelloResponse): Promi
 };
 
 const deleteHandler = async (request: HelloRequest, response: HelloResponse): Promise<HelloResponse> => {
-  setJsonBody(response, {
+  setJsonBody(response as Response<Record<string, unknown>>, {
     message: 'functional hello world delete',
     headers: request.headers,
     query: request.queryParams

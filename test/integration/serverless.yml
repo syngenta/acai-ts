@@ -1,52 +1,45 @@
 service: acai-ts-int-test
-frameworkVersion: '3'
 package:
-  exclude:
-    - .*
-    - .**/**
-    - aws/**
-    - test/**
-    - README.md
-    - serverless.yml
-    - package.json
-    - package-lock.json
+    patterns:
+        - '!.*'
+        - '!**/**'
+        - '!infra/**'
+        - '!test/**'
+        - '!README.md'
+        - '!serverless.yml'
+        - '!package.json'
+        - '!package-lock.json'
+        - openapi.yml
 plugins:
-  - serverless-offline
+    - serverless-plugin-typescript
+    - serverless-offline
 provider:
-  name: aws
-  runtime: nodejs20.x
-  stage: integration
-  region: us-east-1
-  environment:
-    AUTO_VALIDATE: ${env:AUTO_VALIDATE, 'true'}
-    VALIDATE_RESPONSE: ${env:VALIDATE_RESPONSE, 'false'}
-    TEST_API_KEY: ${env:TEST_API_KEY, 'integration-key'}
-custom:
-  ts-node:
-    transpileOnly: true
-    project: tsconfig.integration.json
-  serverless-offline:
-    httpPort: 3000
+    name: aws
+    runtime: nodejs20.x
     stage: local
-    prefix: ${self:service}
-    region: us-east-2
-    host: 127.0.0.1
-    lambdaPort: 3002
-    lambdaHost: 127.0.0.1
-    noAuth: true
-    noPrependStageInUrl: true
-    useWorkerThreads: true
-functions:
-  api:
-    handler: src/router.handler
-    memorySize: 256
-    timeout: 30
+    region: us-east-1
     environment:
-      TS_NODE_PROJECT: tsconfig.integration.json
-    events:
-      - http:
-          path: /
-          method: ANY
-      - http:
-          method: ANY
-          path: /{proxy+}
+        AUTO_VALIDATE: ${env:AUTO_VALIDATE, 'true'}
+        VALIDATE_RESPONSE: ${env:VALIDATE_RESPONSE, 'false'}
+        TEST_API_KEY: ${env:TEST_API_KEY, 'integration-key'}
+custom:
+    serverless-offline:
+        httpPort: 3000
+        stage: local
+        prefix: ${self:service}
+        region: us-east-2
+        lambdaPort: 3002
+        noAuth: true
+        noPrependStageInUrl: true
+functions:
+    api:
+        handler: src/router.handler
+        memorySize: 256
+        timeout: 30
+        events:
+            - http:
+                path: /
+                method: ANY
+            - http:
+                method: ANY
+                path: /{proxy+}

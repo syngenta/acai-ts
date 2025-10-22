@@ -1,11 +1,13 @@
-import {Request, Response, ValidationRequirements} from 'acai-ts';
+import {Request, Response} from 'acai-ts';
+import {MethodRequirements} from '../../utils';
 
-type MiddlewareRequest = Request<Record<string, unknown>>;
+type MiddlewareRequest = Request;
 type MiddlewareResponse = Response<Record<string, unknown>>;
 
-export const requirements: Record<string, ValidationRequirements> = {
+export const requirements: Record<string, MethodRequirements> = {
   get: {
-    requiredAuth: true
+    requiredAuth: true,
+    auth: true
   }
 };
 
