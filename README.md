@@ -53,6 +53,7 @@ export const handler = async (event: any) => {
 
 // ✅ With Acai-TS: Validation handled, focus on logic
 export class CreateUserEndpoint extends BaseEndpoint {
+
   @Validate({ requiredBody: 'CreateUserRequest' })
   async post(request: Request, response: Response): Promise<Response> {
     // Body is already validated - just write business logic!
@@ -60,6 +61,7 @@ export class CreateUserEndpoint extends BaseEndpoint {
     response.body = user;
     return response;
   }
+
 }
 ```
 
@@ -102,6 +104,7 @@ const authMiddleware = async (request: Request, response: Response) => {
 
 // Define your endpoint class with method decorators
 export class UsersEndpoint extends BaseEndpoint {
+
   @Before(authMiddleware)
   @Validate({ requiredBody: 'CreateUserSchema' })
   @Timeout(5000)
@@ -124,9 +127,7 @@ export class UsersEndpoint extends BaseEndpoint {
 }
 
 // Lambda handler
-export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const router = new Router({
     basePath: '/api/v1',
     routesPath: './src/handlers/**/*.ts',
@@ -668,11 +669,13 @@ const rateLimiter = async (request: Request, response: Response) => {
 };
 
 export class ProtectedEndpoint extends BaseEndpoint {
+
   @Before(rateLimiter, authCheck)  // Executes: rateLimiter → authCheck → get()
   async get(request: Request, response: Response): Promise<Response> {
     response.body = { message: 'Authenticated and rate-limited!' };
     return response;
   }
+
 }
 ```
 
@@ -704,12 +707,14 @@ Set request timeout for the method:
 
 ```typescript
 export class HeavyTaskEndpoint extends BaseEndpoint {
+
   @Timeout(30000)  // 30 seconds
   async post(request: Request, response: Response): Promise<Response> {
     await this.processHeavyTask();
     response.body = { completed: true };
     return response;
   }
+
 }
 ```
 
@@ -734,6 +739,7 @@ const router = new Router({
 
 // Use @Auth decorator on methods that require authentication
 export class UsersEndpoint extends BaseEndpoint {
+
   @Auth()  // Requires authentication (default: required=true)
   async get(request: Request, response: Response): Promise<Response> {
     // Auth middleware runs before this method
@@ -808,6 +814,7 @@ Stack multiple decorators on a single method. They execute in a specific order:
 
 ```typescript
 export class UsersEndpoint extends BaseEndpoint {
+
   @Before(rateLimiter)  // Runs first (custom middleware)
   @Auth()  // Auth middleware runs after Before middleware
   @Validate({ requiredBody: 'CreateUserRequest' })  // Validates request
@@ -818,6 +825,7 @@ export class UsersEndpoint extends BaseEndpoint {
     response.body = { id: '123', ...request.body };
     return response;
   }
+
 }
 ```
 
@@ -1130,6 +1138,7 @@ All decorators are applied to the individual HTTP methods (not the class itself)
 
 ```typescript
 export class UsersEndpoint extends BaseEndpoint {
+
   @Before(authMiddleware)           // Runs before the method
   @Validate({ requiredBody: 'UserSchema' })  // Validates request
   @Timeout(5000)                    // Sets 5-second timeout
@@ -1138,6 +1147,7 @@ export class UsersEndpoint extends BaseEndpoint {
     response.body = { id: '123', ...request.body };
     return response;
   }
+
 }
 ```
 
@@ -1235,7 +1245,7 @@ npm run test:coverage
 
 ## 🏗️ Project Structure
 
-Recommended project structure for pattern-based routing:
+Recommended project structure for routing:
 
 ```
 my-lambda/
@@ -1245,28 +1255,6 @@ my-lambda/
 │   │   │   ├── index.controller.ts       # GET/POST /users
 │   │   │   └── {id}.controller.ts        # GET/PUT/DELETE /users/{id}
 │   │   └── products.controller.ts         # /products
-│   ├── schemas/
-│   │   └── openapi.yml
-│   └── index.ts                           # Lambda entry point
-├── test/
-├── tsconfig.json
-└── package.json
-```
-
-For decorator-based routing:
-
-```
-my-lambda/
-├── src/
-│   ├── endpoints/
-│   │   ├── users/
-│   │   │   ├── create-user.endpoint.ts
-│   │   │   ├── get-user.endpoint.ts
-│   │   │   └── update-user.endpoint.ts
-│   │   └── index.ts                       # Export all endpoints
-│   ├── middleware/
-│   │   ├── auth.ts
-│   │   └── logging.ts
 │   ├── schemas/
 │   │   └── openapi.yml
 │   └── index.ts                           # Lambda entry point
